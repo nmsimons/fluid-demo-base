@@ -4,24 +4,13 @@
  */
 
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { FluidTable } from "../schema/app_schema.js";
+import { Items } from "../schema/app_schema.js";
 import "../output.css";
-import { IFluidContainer, Tree, TreeView } from "fluid-framework";
+import { IFluidContainer, TreeView } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
-import {
-	NewColumnButton,
-	NewEmptyRowButton,
-	NewRowButton,
-	NewManysRowsButton,
-	DeleteAllRowsButton,
-	UndoButton,
-	RedoButton,
-	DeleteSelectedRowsButton,
-	MoveSelectedRowsButton,
-	MoveSelectedColumnsButton,
-} from "./buttonux.js";
+import { UndoButton, RedoButton, NewShapeButton } from "./buttonux.js";
 import { TableSelection } from "../utils/selection.js";
 import {
 	Avatar,
@@ -40,15 +29,16 @@ import { User, UsersManager } from "../utils/Interfaces/UsersManager.js";
 import { PresenceContext } from "./PresenceContext.js";
 
 export function ReactApp(props: {
-	table: TreeView<typeof FluidTable>;
+	tree: TreeView<typeof Items>;
 	selection: SelectionManager<TableSelection>;
 	users: UsersManager;
 	container: IFluidContainer;
 	undoRedo: undoRedo;
 }): JSX.Element {
-	const { table, selection, users, container, undoRedo } = props;
+	const { tree, selection, users, container, undoRedo } = props;
 	const [connectionState, setConnectionState] = useState("");
 	const [saved, setSaved] = useState(false);
+	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
 	/** Unsubscribe to undo-redo events when the component unmounts */
 	useEffect(() => {
@@ -66,41 +56,10 @@ export function ReactApp(props: {
 				id="main"
 				className="flex flex-col bg-transparent h-screen w-full overflow-hidden overscroll-none"
 			>
-				<Header saved={saved} connectionState={connectionState} table={table.root} />
+				<Header saved={saved} connectionState={connectionState} />
 				<Toolbar className="h-[48px]">
 					<ToolbarGroup>
-						<NewColumnButton table={table.root} />
-						<NewEmptyRowButton table={table.root} selection={selection} />
-						<NewRowButton table={table.root} selection={selection} />
-						<NewManysRowsButton table={table.root} />
-					</ToolbarGroup>
-					<ToolbarDivider />
-					<ToolbarGroup>
-						<MoveSelectedRowsButton
-							table={table.root}
-							selection={selection}
-							up={true}
-						/>
-						<MoveSelectedRowsButton
-							table={table.root}
-							selection={selection}
-							up={false}
-						/>
-						<MoveSelectedColumnsButton
-							table={table.root}
-							selection={selection}
-							left={true}
-						/>
-						<MoveSelectedColumnsButton
-							table={table.root}
-							selection={selection}
-							left={false}
-						/>
-					</ToolbarGroup>
-					<ToolbarDivider />
-					<ToolbarGroup>
-						<DeleteSelectedRowsButton table={table.root} selection={selection} />
-						<DeleteAllRowsButton table={table.root} />
+						<NewShapeButton items={tree.root} canvasSize={canvasSize} />
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
@@ -110,11 +69,12 @@ export function ReactApp(props: {
 				</Toolbar>
 				<div className="flex h-[calc(100vh-96px)] w-full flex-row ">
 					<Canvas
-						table={table.root}
+						items={tree.root}
 						selection={selection}
 						container={container}
 						setConnectionState={setConnectionState}
 						setSaved={setSaved}
+						setSize={(width, height) => setCanvasSize({ width, height })}
 					/>
 				</div>
 			</div>
@@ -122,12 +82,8 @@ export function ReactApp(props: {
 	);
 }
 
-export function Header(props: {
-	saved: boolean;
-	connectionState: string;
-	table: FluidTable;
-}): JSX.Element {
-	const { saved, connectionState, table } = props;
+export function Header(props: { saved: boolean; connectionState: string }): JSX.Element {
+	const { saved, connectionState } = props;
 
 	return (
 		<div className="h-[48px] flex shrink-0 flex-row items-center justify-between bg-black text-base text-white z-40 w-full text-nowrap">
@@ -139,30 +95,10 @@ export function Header(props: {
 			<div className="flex flex-row items-center m-2">
 				<SaveStatus saved={saved} />
 				<HeaderDivider />
-				<RowCount table={table} />
-				<HeaderDivider />
 				<ConnectionStatus connectionState={connectionState} />
 				<HeaderDivider />
 				<UserCorner />
 			</div>
-		</div>
-	);
-}
-
-export function RowCount(props: { table: FluidTable }): JSX.Element {
-	const { table } = props;
-	const [rowCount, setRowCount] = useState(table.rows.length);
-
-	useEffect(() => {
-		const unsubscribe = Tree.on(table.rows, "nodeChanged", () => {
-			setRowCount(table.rows.length);
-		});
-		return unsubscribe;
-	}, [table]);
-
-	return (
-		<div className="flex items-center">
-			<Text>{rowCount}&nbsp;rows</Text>
 		</div>
 	);
 }

@@ -3,7 +3,7 @@ import { AzureClient } from "@fluidframework/azure-client";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { ReactApp } from "./react/ux.js";
-import { appTreeConfiguration, FluidTable, hintValues } from "./schema/app_schema.js";
+import { appTreeConfiguration } from "./schema/app_schema.js";
 import { createUndoRedoStacks } from "./utils/undo.js";
 import { containerSchema } from "./schema/container_schema.js";
 import { loadFluidData } from "./infra/fluid.js";
@@ -27,46 +27,10 @@ export async function loadApp(props: {
 	// Initialize Fluid Container
 	const { container } = await loadFluidData(containerId, containerSchema, client, logger);
 
-	// Create an array of rows to be used in the table
-	const rows = new Array(10).fill(null).map(() => {
-		return { _cells: [], props: null };
-	});
-
 	// Initialize the SharedTree DDSes
 	const appTree = container.initialObjects.appData.viewWith(appTreeConfiguration);
 	if (appTree.compatibility.canInitialize) {
-		appTree.initialize(
-			new FluidTable({
-				rows: rows,
-				columns: [
-					{
-						name: "String",
-						hint: hintValues.string,
-						props: null,
-					},
-					{
-						name: "Number",
-						hint: hintValues.number,
-						props: null,
-					},
-					{
-						name: "Boolean",
-						hint: hintValues.boolean,
-						props: null,
-					},
-					{
-						name: "Date",
-						hint: hintValues.date,
-						props: null,
-					},
-					{
-						name: "Vote",
-						hint: hintValues.vote,
-						props: null,
-					},
-				],
-			}),
-		);
+		appTree.initialize([]);
 	}
 
 	// Get the Presence data object from the container
@@ -113,7 +77,7 @@ export async function loadApp(props: {
 	root.render(
 		<FluentProvider theme={webLightTheme}>
 			<ReactApp
-				table={appTree}
+				tree={appTree}
 				selection={selection}
 				users={users}
 				container={container}

@@ -11,6 +11,9 @@ import {
 	FluidTable,
 	HintValues,
 	hintValues,
+	Items,
+	Position,
+	Shape,
 } from "../schema/app_schema.js";
 import {
 	DismissFilled,
@@ -26,6 +29,7 @@ import {
 	TableMoveBelowFilled,
 	TableMoveLeftFilled,
 	TableMoveRightFilled,
+	ShapesRegular,
 } from "@fluentui/react-icons";
 import { Tree, TreeStatus } from "fluid-framework";
 import { selectionType, TableSelection } from "../utils/selection.js";
@@ -40,6 +44,40 @@ import {
 	ToolbarButton,
 	Tooltip,
 } from "@fluentui/react-components";
+
+export function NewShapeButton(props: {
+	items: Items;
+	canvasSize: { width: number; height: number };
+}): JSX.Element {
+	const { items, canvasSize } = props;
+
+	const handleClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		const shape = new Shape({
+			position: new Position({
+				x: getRandomNumber(0, canvasSize.width),
+				y: getRandomNumber(0, canvasSize.height),
+			}),
+			width: getRandomNumber(10, 60),
+			height: getRandomNumber(10, 60),
+			color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+			type: "circle",
+		});
+		items.insertAtStart(shape);
+	};
+	return (
+		<TooltipButton
+			onClick={(e: React.MouseEvent) => handleClick(e)}
+			icon={<ShapesRegular />}
+			tooltip="Insert a new shape"
+		/>
+	);
+}
+
+// Generate a random number between min and max
+const getRandomNumber = (min: number, max: number): number => {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
 const getLastSelectedRow = (
 	table: FluidTable,
@@ -427,7 +465,7 @@ export function ColumnTypeDropdown(props: { column: FluidColumn }): JSX.Element 
 		type: [column.hint ?? ""],
 	});
 	const onChange: MenuProps["onCheckedValueChange"] = (
-		e: React.MouseEvent,
+		e,
 		{ name, checkedItems }: { name: string; checkedItems: string[] },
 	) => {
 		setCheckedValues((s) => ({ ...s, [name]: checkedItems }));

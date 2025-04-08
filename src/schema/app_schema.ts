@@ -20,6 +20,25 @@ import { Table } from "./table_schema.js";
 // As this schema uses a recursive type, the beta SchemaFactoryRecursive is used instead of just SchemaFactory.
 const sf = new SchemaFactory("fc1db2e8-0a00-11ee-be56-0242ac120002");
 
+export class Position extends sf.object("Position", {
+	// The x coordinate is a number that represents the x coordinate of the shape
+	x: sf.number,
+	// The y coordinate is a number that represents the y coordinate of the shape
+	y: sf.number,
+}) {}
+
+export class Shape extends sf.object("Shape", {
+	// The id is a string that represents the id of the shape
+	id: sf.identifier,
+	position: Position,
+	width: sf.number, // The width is a number that represents the width of the shape
+	height: sf.number, // The height is a number that represents the height of the shape
+	color: sf.string, // The color is a string that represents the color of the shape
+	type: sf.string, // The shapeType is a string that represents the type of the shape
+}) {} // The size is a number that represents the size of the shape
+
+export class Items extends sf.array("Items", [Shape]) {}
+
 /**
  * A SharedTree object date-time
  */
@@ -164,5 +183,5 @@ export const hintValues = {
  * */
 export const appTreeConfiguration = new TreeViewConfiguration(
 	// Schema for the root
-	{ schema: FluidTable },
+	{ schema: Items },
 );
