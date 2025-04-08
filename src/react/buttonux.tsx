@@ -11,8 +11,8 @@ import {
 	FluidTable,
 	HintValues,
 	hintValues,
+	Item,
 	Items,
-	Position,
 	Shape,
 } from "../schema/app_schema.js";
 import {
@@ -51,19 +51,25 @@ export function NewShapeButton(props: {
 }): JSX.Element {
 	const { items, canvasSize } = props;
 
+	const maxSize = 100;
+	const minSize = 20;
+
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		const shape = new Shape({
-			position: new Position({
-				x: getRandomNumber(0, canvasSize.width),
-				y: getRandomNumber(0, canvasSize.height),
-			}),
-			width: getRandomNumber(10, 60),
-			height: getRandomNumber(10, 60),
+			width: getRandomNumber(minSize, maxSize),
+			height: getRandomNumber(minSize, maxSize),
 			color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-			type: "circle",
+			// Type is randomly selected from "circle", "square", "triangle", or "star"
+			type: ["circle", "square", "triangle", "star"][Math.floor(Math.random() * 4)],
+			rotation: Math.floor(Math.random() * 360),
 		});
-		items.insertAtStart(shape);
+		const item = new Item({
+			x: getRandomNumber(0, canvasSize.width - maxSize - minSize),
+			y: getRandomNumber(0, canvasSize.height - maxSize - minSize),
+			content: shape,
+		});
+		items.insertAtEnd(item);
 	};
 	return (
 		<TooltipButton

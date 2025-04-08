@@ -6,7 +6,7 @@
 import React, { JSX, useContext, useEffect, useState } from "react";
 import { Items } from "../schema/app_schema.js";
 import "../output.css";
-import { IFluidContainer, TreeView } from "fluid-framework";
+import { ConnectionState, IFluidContainer, TreeView } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
@@ -40,6 +40,27 @@ export function ReactApp(props: {
 	const [saved, setSaved] = useState(false);
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
+	useEffect(() => {
+		const updateConnectionState = () => {
+			if (container.connectionState === ConnectionState.Connected) {
+				setConnectionState("connected");
+			} else if (container.connectionState === ConnectionState.Disconnected) {
+				setConnectionState("disconnected");
+			} else if (container.connectionState === ConnectionState.EstablishingConnection) {
+				setConnectionState("connecting");
+			} else if (container.connectionState === ConnectionState.CatchingUp) {
+				setConnectionState("catching up");
+			}
+		};
+		updateConnectionState();
+		setSaved(!props.container.isDirty);
+		container.on("connected", updateConnectionState);
+		container.on("disconnected", updateConnectionState);
+		container.on("dirty", () => setSaved(false));
+		container.on("saved", () => setSaved(true));
+		container.on("disposed", updateConnectionState);
+	}, []);
+
 	/** Unsubscribe to undo-redo events when the component unmounts */
 	useEffect(() => {
 		return undoRedo.dispose;
@@ -57,7 +78,7 @@ export function ReactApp(props: {
 				className="flex flex-col bg-transparent h-screen w-full overflow-hidden overscroll-none"
 			>
 				<Header saved={saved} connectionState={connectionState} />
-				<Toolbar className="h-[48px]">
+				<Toolbar className="h-[48px] shadow-lg">
 					<ToolbarGroup>
 						<NewShapeButton items={tree.root} canvasSize={canvasSize} />
 					</ToolbarGroup>
@@ -70,10 +91,7 @@ export function ReactApp(props: {
 				<div className="flex h-[calc(100vh-96px)] w-full flex-row ">
 					<Canvas
 						items={tree.root}
-						selection={selection}
 						container={container}
-						setConnectionState={setConnectionState}
-						setSaved={setSaved}
 						setSize={(width, height) => setCanvasSize({ width, height })}
 					/>
 				</div>
