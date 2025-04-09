@@ -11,7 +11,6 @@ import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
 import { UndoButton, RedoButton, NewShapeButton } from "./buttonux.js";
-import { TableSelection } from "../utils/selection.js";
 import {
 	Avatar,
 	AvatarGroup,
@@ -31,7 +30,7 @@ import { DragManager } from "../utils/Interfaces/DragManager.js";
 
 export function ReactApp(props: {
 	tree: TreeView<typeof Items>;
-	selection: SelectionManager<TableSelection>;
+	selection: SelectionManager;
 	users: UsersManager;
 	container: IFluidContainer;
 	undoRedo: undoRedo;

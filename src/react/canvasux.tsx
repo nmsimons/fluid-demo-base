@@ -17,6 +17,7 @@ export function Canvas(props: {
 	const { items, setSize } = props;
 	const [itemsArray, setItemsArray] = React.useState<Item[]>(items.slice());
 	const [dragging, setDragging] = useState(false);
+	const presence = useContext(PresenceContext);
 
 	const canvasRef = React.useRef<HTMLDivElement>(null);
 
@@ -43,8 +44,15 @@ export function Canvas(props: {
 		window.addEventListener("resize", handleResize);
 	}, []);
 
+	const handleClick = () => {
+		if (presence.selection) {
+			presence.selection.clearSelection();
+		}
+	};
+
 	return (
 		<div
+			onClick={handleClick}
 			ref={canvasRef}
 			onDragOver={(e) => {
 				e.preventDefault();
@@ -71,11 +79,18 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 	const { item, index } = props;
 	const [offset, setOffset] = useState({ x: 0, y: 0 });
 	const [dragging, setDragging] = useState(false);
+	const [selected, setSelected] = useState(false);
 
-	const [itemProps, setItemProps] = useState<{ left: number; top: number; zIndex: number }>({
+	const [itemProps, setItemProps] = useState<{
+		left: number;
+		top: number;
+		zIndex: number;
+		transform: string;
+	}>({
 		left: item.x,
 		top: item.y,
 		zIndex: index,
+		transform: `rotate(${item.rotation}deg)`,
 	});
 
 	useEffect(() => {
@@ -84,6 +99,7 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 				left: item.x,
 				top: item.y,
 				zIndex: index,
+				transform: `rotate(${item.rotation}deg)`,
 			});
 		});
 		return unsubscribe;
@@ -98,6 +114,7 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 					left: dragData.value.x,
 					top: dragData.value.y,
 					zIndex: index,
+					transform: `rotate(${item.rotation}deg)`,
 				});
 			}
 		});
@@ -111,8 +128,16 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 					left: dragData.value.x,
 					top: dragData.value.y,
 					zIndex: index,
+					transform: `rotate(${item.rotation}deg)`,
 				});
 			}
+		});
+		return unsubscribe;
+	}, []);
+
+	useEffect(() => {
+		const unsubscribe = presence.selection.events.on("localUpdated", (selectionData) => {
+			setSelected(presence.selection.testSelection({ id: item.id }));
 		});
 		return unsubscribe;
 	}, []);
@@ -123,6 +148,7 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 	};
 
 	const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+		presence.selection.setSelection({ id: item.id });
 		setDragging(true);
 		setOffset(calculateOffset(e));
 		e.dataTransfer.setDragImage(new Image(), 0, 0);
@@ -159,8 +185,30 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 		};
 	};
 
+	const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+		e.stopPropagation();
+		if (presence.selection) {
+			if (selected) {
+				presence.selection.clearSelection();
+			} else {
+				presence.selection.setSelection({ id: item.id });
+			}
+		}
+	};
+
+	const toggleSelection = () => {
+		if (presence.selection) {
+			if (selected) {
+				presence.selection.removeFromSelection({ id: item.id });
+			} else {
+				presence.selection.addToSelection({ id: item.id });
+			}
+		}
+	};
+
 	return (
 		<div
+			onClick={(e) => handleClick(e)}
 			onDragStart={(e) => handleDragStart(e)}
 			onDrag={(e) => handleDrag(e)}
 			onDragEnd={(e) => handleDragEnd(e)}
@@ -168,8 +216,26 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 			className="absolute"
 			style={{ ...itemProps }}
 		>
+			<PresenceBox selected={selected} />
 			{getContentElement(item)}
 		</div>
+	);
+}
+
+export function PresenceBox(props: { selected: boolean }): JSX.Element {
+	const { selected } = props;
+	const padding = 8;
+	return (
+		<div
+			className={`absolute border-4 border-dashed border-blue-500 opacity-40 bg-transparent ${selected ? "" : " hidden"}`}
+			style={{
+				left: -padding,
+				top: -padding,
+				width: `calc(100% + ${padding * 2}px)`,
+				height: `calc(100% + ${padding * 2}px)`,
+				zIndex: 1000,
+			}}
+		></div>
 	);
 }
 
@@ -179,25 +245,11 @@ export function ShapeView(props: { shape: Shape }): JSX.Element {
 		case "circle":
 			return <Circle size={shape.width} backgroundColor={shape.color} />;
 		case "square":
-			return (
-				<Square
-					size={shape.width}
-					backgroundColor={shape.color}
-					rotation={shape.rotation}
-				/>
-			);
+			return <Square size={shape.width} backgroundColor={shape.color} />;
 		case "triangle":
-			return (
-				<Triangle
-					size={shape.width}
-					backgroundColor={shape.color}
-					rotation={shape.rotation}
-				/>
-			);
+			return <Triangle size={shape.width} backgroundColor={shape.color} />;
 		case "star":
-			return (
-				<Star size={shape.width} backgroundColor={shape.color} rotation={shape.rotation} />
-			);
+			return <Star size={shape.width} backgroundColor={shape.color} />;
 		default:
 			return <></>;
 	}
@@ -220,11 +272,7 @@ export function Circle(props: { size: number; backgroundColor: string }): JSX.El
 	);
 }
 
-export function Square(props: {
-	size: number;
-	backgroundColor: string;
-	rotation: number;
-}): JSX.Element {
+export function Square(props: { size: number; backgroundColor: string }): JSX.Element {
 	const { size, backgroundColor } = props;
 
 	// Render a div with the absolute position of the item
@@ -236,17 +284,12 @@ export function Square(props: {
 				width: size,
 				height: size,
 				backgroundColor,
-				transform: `rotate(${props.rotation}deg)`,
 			}}
 		></div>
 	);
 }
 
-export function Triangle(props: {
-	size: number;
-	backgroundColor: string;
-	rotation: number;
-}): JSX.Element {
+export function Triangle(props: { size: number; backgroundColor: string }): JSX.Element {
 	const { size, backgroundColor } = props;
 	// render a div with an equilateral triangle using CSS borders with a shadow
 	return (
@@ -257,26 +300,16 @@ export function Triangle(props: {
 				borderLeft: `${size / 2}px solid transparent`,
 				borderRight: `${size / 2}px solid transparent`,
 				borderBottom: `${size}px solid ${backgroundColor}`,
-				transform: `rotate(${props.rotation}deg)`,
 			}}
 		></div>
 	);
 }
 
-export function Star(props: {
-	size: number;
-	backgroundColor: string;
-	rotation: number;
-}): JSX.Element {
-	const { size, backgroundColor, rotation } = props;
+export function Star(props: { size: number; backgroundColor: string }): JSX.Element {
+	const { size, backgroundColor } = props;
 	// Render a star shape using svg and rotation
 	return (
-		<svg
-			width={size}
-			height={size}
-			style={{ transform: `rotate(${rotation}deg)` }}
-			viewBox="0 0 24 24"
-		>
+		<svg width={size} height={size} viewBox="0 0 24 24">
 			<polygon
 				points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
 				fill={backgroundColor}

@@ -14,7 +14,7 @@ import {
 	ClientConnectionId,
 } from "@fluidframework/presence/alpha";
 import { Listenable } from "fluid-framework";
-import { SelectionManager, SelectionPackage } from "./Interfaces/SelectionManager.js";
+import { SelectionManager, SelectionPackage, Selection } from "./Interfaces/SelectionManager.js";
 
 // A function that creates a new SelectionManager instance
 // with the given presence and workspace.
@@ -159,6 +159,140 @@ export function createTableSelectionManager(props: {
 				}
 			}
 			return false;
+		}
+	}
+
+	return new SelectionManagerImpl(name, workspace, presence);
+}
+
+export function createSelectionManager(props: {
+	presence: Presence;
+	workspace: Workspace<{}>;
+	name: string;
+}): SelectionManager {
+	const { presence, workspace, name } = props;
+
+	class SelectionManagerImpl implements SelectionManager {
+		initialState: SelectionPackage = { selected: [] }; // Default initial state for the selection manager
+
+		state: LatestState<SelectionPackage>;
+
+		constructor(
+			name: string,
+			workspace: Workspace<{}>,
+			private presence: Presence,
+		) {
+			workspace.add(name, latestStateFactory(this.initialState));
+			this.state = workspace.props[name];
+		}
+
+		public get events(): Listenable<LatestStateEvents<SelectionPackage<Selection>>> {
+			return this.state.events;
+		}
+
+		public clients = {
+			getAttendee: (clientId: ClientConnectionId | ClientSessionId) => {
+				return this.presence.getAttendee(clientId);
+			},
+			getAttendees: () => {
+				return this.presence.getAttendees();
+			},
+			getMyself: () => {
+				return this.presence.getMyself();
+			},
+			events: this.presence.events,
+		};
+
+		/** Test if the given id is selected by the local client */
+		public testSelection(sel: Selection) {
+			return this._testForInclusion(sel, this.state.local.selected);
+		}
+
+		/** Test if the given id is selected by any remote client */
+		public testRemoteSelection(sel: Selection): string[] {
+			const remoteSelectedClients: string[] = [];
+			for (const cv of this.state.clientValues()) {
+				if (cv.client.getConnectionStatus() === "Connected") {
+					if (this._testForInclusion(sel, cv.value.selected)) {
+						remoteSelectedClients.push(cv.client.sessionId);
+					}
+				}
+			}
+			return remoteSelectedClients;
+		}
+
+		/** Clear the current selection */
+		public clearSelection() {
+			this.state.local = this.initialState;
+		}
+
+		/** Change the selection to the given id or array of ids */
+		public setSelection(sel: Selection | Selection[]) {
+			if (Array.isArray(sel)) {
+				this.state.local = { selected: sel };
+			} else {
+				this.state.local = { selected: [sel] };
+			}
+			return;
+		}
+
+		/** Toggle the selection of the given id */
+		public toggleSelection(sel: Selection) {
+			if (this.testSelection(sel)) {
+				this.removeFromSelection(sel);
+			} else {
+				this.addToSelection(sel);
+			}
+			return;
+		}
+
+		/** Add the given id to the selection */
+		public addToSelection(sel: Selection) {
+			const arr: Selection[] = this.state.local.selected.slice();
+			if (!this._testForInclusion(sel, arr)) {
+				arr.push(sel);
+			}
+			this.state.local = { selected: arr };
+		}
+
+		/** Remove the given id from the selection */
+		public removeFromSelection(sel: Selection) {
+			const arr: Selection[] = this.state.local.selected.filter((s) => s.id !== sel.id);
+			this.state.local = { selected: arr };
+		}
+
+		private _testForInclusion(sel: Selection, collection: readonly Selection[]): boolean {
+			if (!collection || collection.length === 0) {
+				return false;
+			}
+
+			for (const s of collection) {
+				if (s.id === sel.id) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/** Get the current local selection array */
+		public getLocalSelection(): readonly Selection[] {
+			return this.state.local.selected;
+		}
+
+		/** Get the current remote selection map where the key is the selected item id and the value is an array of client ids */
+		public getRemoteSelected(): Map<Selection, string[]> {
+			const remoteSelected = new Map<Selection, string[]>();
+			for (const cv of this.state.clientValues()) {
+				if (cv.client.getConnectionStatus() === "Connected") {
+					for (const sel of cv.value.selected) {
+						if (!remoteSelected.has(sel)) {
+							remoteSelected.set(sel, []);
+						}
+						remoteSelected.get(sel)?.push(cv.client.sessionId);
+					}
+				}
+			}
+			return remoteSelected;
 		}
 	}
 

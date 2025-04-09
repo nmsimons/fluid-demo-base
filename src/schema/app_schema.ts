@@ -24,7 +24,6 @@ export class Shape extends sf.object("Shape", {
 	width: sf.number, // The width is a number that represents the width of the shape
 	height: sf.number, // The height is a number that represents the height of the shape
 	color: sf.string, // The color is a string that represents the color of the shape
-	rotation: sf.number, // The rotation is a number that represents the rotation of the shape
 	type: sf.string, // The shapeType is a string that represents the type of the shape
 }) {} // The size is a number that represents the size of the shape
 
@@ -32,6 +31,7 @@ export class Item extends sf.object("Item", {
 	id: sf.identifier,
 	x: sf.number,
 	y: sf.number,
+	rotation: sf.number,
 	content: [Shape],
 }) {}
 

@@ -62,12 +62,12 @@ export function NewShapeButton(props: {
 			color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
 			// Type is randomly selected from "circle", "square", "triangle", or "star"
 			type: ["circle", "square", "triangle", "star"][Math.floor(Math.random() * 4)],
-			rotation: Math.floor(Math.random() * 360),
 		});
 		const item = new Item({
 			x: getRandomNumber(0, canvasSize.width - maxSize - minSize),
 			y: getRandomNumber(0, canvasSize.height - maxSize - minSize),
 			content: shape,
+			rotation: Math.floor(Math.random() * 360),
 		});
 		items.insertAtEnd(item);
 	};

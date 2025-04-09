@@ -61,6 +61,6 @@ export type Selection = {
 	id: string;
 };
 
-export type SelectionPackage<TSelection extends Selection> = {
+export type SelectionPackage<TSelection extends Selection = Selection> = {
 	selected: TSelection[];
 };
