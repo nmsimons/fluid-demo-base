@@ -4,9 +4,10 @@
  * Licensed under the MIT License.
  */
 
-import React, { JSX, useEffect } from "react";
+import React, { JSX, useContext, useEffect, useState } from "react";
 import { Items, Item, Shape } from "../schema/app_schema.js";
 import { IFluidContainer, Tree } from "fluid-framework";
+import { PresenceContext } from "./PresenceContext.js";
 
 export function Canvas(props: {
 	items: Items;
@@ -15,11 +16,12 @@ export function Canvas(props: {
 }): JSX.Element {
 	const { items, setSize } = props;
 	const [itemsArray, setItemsArray] = React.useState<Item[]>(items.slice());
+	const [dragging, setDragging] = useState(false);
+
 	const canvasRef = React.useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		const unsubscribe = Tree.on(items, "treeChanged", () => {
-			console.log("Tree changed");
+		const unsubscribe = Tree.on(items, "nodeChanged", () => {
 			setItemsArray(items.slice());
 		});
 		return unsubscribe;
@@ -42,7 +44,14 @@ export function Canvas(props: {
 	}, []);
 
 	return (
-		<div ref={canvasRef} className="relative flex h-full w-full bg-transparent overflow-auto">
+		<div
+			ref={canvasRef}
+			onDragOver={(e) => {
+				e.preventDefault();
+				e.dataTransfer.dropEffect = "move";
+			}}
+			className="relative flex h-full w-full bg-transparent overflow-auto"
+		>
 			{itemsArray.map((item, index) => (
 				<ItemView item={item} key={index} index={index} />
 			))}
@@ -60,15 +69,104 @@ const getContentElement = (item: Item): JSX.Element => {
 
 export function ItemView(props: { item: Item; index: number }): JSX.Element {
 	const { item, index } = props;
-	return (
-		<div
-			draggable="true"
-			className="absolute"
-			style={{
+	const [offset, setOffset] = useState({ x: 0, y: 0 });
+	const [dragging, setDragging] = useState(false);
+
+	const [itemProps, setItemProps] = useState<{ left: number; top: number; zIndex: number }>({
+		left: item.x,
+		top: item.y,
+		zIndex: index,
+	});
+
+	useEffect(() => {
+		const unsubscribe = Tree.on(item, "nodeChanged", () => {
+			setItemProps({
 				left: item.x,
 				top: item.y,
 				zIndex: index,
-			}}
+			});
+		});
+		return unsubscribe;
+	}, []);
+
+	const presence = useContext(PresenceContext); // Placeholder for context if needed
+
+	useEffect(() => {
+		const unsubscribe = presence.drag.events.on("updated", (dragData) => {
+			if (dragData.value && dragData.value.id === item.id) {
+				setItemProps({
+					left: dragData.value.x,
+					top: dragData.value.y,
+					zIndex: index,
+				});
+			}
+		});
+		return unsubscribe;
+	}, []);
+
+	useEffect(() => {
+		const unsubscribe = presence.drag.events.on("localUpdated", (dragData) => {
+			if (dragData.value && dragData.value.id === item.id) {
+				setItemProps({
+					left: dragData.value.x,
+					top: dragData.value.y,
+					zIndex: index,
+				});
+			}
+		});
+		return unsubscribe;
+	}, []);
+
+	const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
+		const { x, y } = getOffsetCoordinates(e);
+		presence.drag.setDragging({ id: item.id, x, y });
+	};
+
+	const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+		setDragging(true);
+		setOffset(calculateOffset(e));
+		e.dataTransfer.setDragImage(new Image(), 0, 0);
+	};
+
+	const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+		setDragging(false);
+		presence.drag.clearDragging();
+		const { x, y } = getOffsetCoordinates(e);
+		Tree.runTransaction(item, () => {
+			item.x = x;
+			item.y = y;
+		});
+	};
+
+	const getOffsetCoordinates = (e: React.DragEvent<HTMLDivElement>): { x: number; y: number } => {
+		const newX = e.pageX - (e.currentTarget.parentElement?.offsetLeft || 0);
+		const newY = e.pageY - (e.currentTarget.parentElement?.offsetTop || 0);
+		const coordinates = { x: newX - offset.x, y: newY - offset.y };
+		coordinates.x = coordinates.x < 0 ? itemProps.left : coordinates.x;
+		coordinates.y = coordinates.y < 0 ? itemProps.top : coordinates.y;
+		return coordinates;
+	};
+
+	// calculate the offset of the pointer from the shape's origin
+	// this is used to ensure the shape moves smoothly with the pointer
+	// when dragging
+	const calculateOffset = (e: React.DragEvent<HTMLDivElement>): { x: number; y: number } => {
+		const newX = e.pageX - (e.currentTarget.parentElement?.offsetLeft || 0);
+		const newY = e.pageY - (e.currentTarget.parentElement?.offsetTop || 0);
+		return {
+			x: newX - item.x,
+			y: newY - item.y,
+		};
+	};
+
+	return (
+		<div
+			onDragStart={(e) => handleDragStart(e)}
+			onDrag={(e) => handleDrag(e)}
+			onDragEnd={(e) => handleDragEnd(e)}
+			draggable="true"
+			className="absolute"
+			style={{ ...itemProps }}
 		>
 			{getContentElement(item)}
 		</div>

@@ -27,6 +27,7 @@ import {
 } from "@fluentui/react-components";
 import { User, UsersManager } from "../utils/Interfaces/UsersManager.js";
 import { PresenceContext } from "./PresenceContext.js";
+import { DragManager } from "../utils/Interfaces/DragManager.js";
 
 export function ReactApp(props: {
 	tree: TreeView<typeof Items>;
@@ -34,8 +35,9 @@ export function ReactApp(props: {
 	users: UsersManager;
 	container: IFluidContainer;
 	undoRedo: undoRedo;
+	drag: DragManager;
 }): JSX.Element {
-	const { tree, selection, users, container, undoRedo } = props;
+	const { tree, selection, users, container, undoRedo, drag } = props;
 	const [connectionState, setConnectionState] = useState("");
 	const [saved, setSaved] = useState(false);
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -71,6 +73,7 @@ export function ReactApp(props: {
 			value={{
 				users: users,
 				selection: selection,
+				drag: drag,
 			}}
 		>
 			<div

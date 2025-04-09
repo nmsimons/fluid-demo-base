@@ -15,6 +15,7 @@ import { createTableSelectionManager } from "./utils/selection.js";
 import { createUsersManager } from "./utils/users.js";
 import { UserInfo } from "./utils/Interfaces/UsersManager.js";
 import { AccountInfo } from "@azure/msal-browser";
+import { createDragManager } from "./utils/drag.js";
 
 export async function loadApp(props: {
 	client: AzureClient;
@@ -62,6 +63,12 @@ export async function loadApp(props: {
 		me: userInfo, // The current user
 	});
 
+	const drag = createDragManager({
+		name: "drag:main",
+		workspace,
+		presence,
+	});
+
 	// create the root element for React
 	const app = document.createElement("div");
 	app.id = "app";
@@ -79,6 +86,7 @@ export async function loadApp(props: {
 			<ReactApp
 				tree={appTree}
 				selection={selection}
+				drag={drag}
 				users={users}
 				container={container}
 				undoRedo={undoRedo}
