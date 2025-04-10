@@ -239,7 +239,6 @@ export function DragHandle(props: { item: Item }): JSX.Element {
 		e.stopPropagation();
 		e.preventDefault();
 
-		const s = e.currentTarget.getBoundingClientRect();
 		const o = calculateOffsetFromCenter(e, item);
 		const center = { x: item.content.width / 2, y: item.content.height / 2 };
 		const angleInRadians = Math.atan2(o.y - center.y, o.x - center.x);
@@ -250,7 +249,6 @@ export function DragHandle(props: { item: Item }): JSX.Element {
 		if (normalizedAngle < 0) normalizedAngle += 360;
 
 		rotation.current = normalizedAngle;
-		console.log("rotation:", o, angleInDegrees, normalizedAngle, s.height, s.width);
 
 		if (rotation.current !== item.rotation) {
 			presence.drag.setDragging({
@@ -281,8 +279,6 @@ export function DragHandle(props: { item: Item }): JSX.Element {
 
 	const handleClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
 		e.stopPropagation();
-		const o = calculateOffsetFromCanvasOrigin(e, item);
-		console.log("click", o);
 	};
 
 	return (
