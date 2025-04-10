@@ -162,7 +162,7 @@ export const CurrentUser = (): JSX.Element => {
 
 export const Facepile = (props: Partial<AvatarGroupProps>) => {
 	const users = useContext(PresenceContext).users;
-	const [userRoster, setUserRoster] = useState(users.getUsers());
+	const [userRoster, setUserRoster] = useState(users.getConnectedUsers());
 
 	useEffect(() => {
 		// Check for changes to the user roster and update the avatar group if necessary

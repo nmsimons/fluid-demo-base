@@ -3,6 +3,8 @@ import { Item, Shape } from "../schema/app_schema.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { ShapeView } from "./shapeux.js";
 import { Tree } from "fluid-framework";
+import { DragManager } from "../utils/Interfaces/DragManager.js";
+import { DragAndRotatePackage } from "../utils/drag.js";
 
 const getContentElement = (item: Item): JSX.Element => {
 	if (Tree.is(item.content, Shape)) {
@@ -15,8 +17,13 @@ const getContentElement = (item: Item): JSX.Element => {
 export function ItemView(props: { item: Item; index: number }): JSX.Element {
 	const { item, index } = props;
 	const [offset, setOffset] = useState({ x: 0, y: 0 });
-	const [selected, setSelected] = useState(false);
-	const [remoteSelected, setRemoteSelected] = useState<string[]>([]);
+
+	const presence = useContext(PresenceContext); // Placeholder for context if needed
+
+	const [selected, setSelected] = useState(presence.selection.testSelection({ id: item.id }));
+	const [remoteSelected, setRemoteSelected] = useState<string[]>(
+		presence.selection.testRemoteSelection({ id: item.id }),
+	);
 
 	const [itemProps, setItemProps] = useState<{
 		left: number;
@@ -42,35 +49,33 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 		return unsubscribe;
 	}, []);
 
-	const presence = useContext(PresenceContext); // Placeholder for context if needed
-
 	useEffect(() => {
-		const unsubscribe = presence.drag.events.on("updated", (dragData) => {
-			if (dragData.value && dragData.value.id === item.id) {
-				setItemProps({
-					left: dragData.value.x,
-					top: dragData.value.y,
-					zIndex: index,
-					transform: `rotate(${dragData.value.rotation}deg)`,
-				});
-			}
-		});
-		return unsubscribe;
+		return dragListener("updated", presence.drag);
 	}, []);
 
 	useEffect(() => {
-		const unsubscribe = presence.drag.events.on("localUpdated", (dragData) => {
-			if (dragData.value && dragData.value.id === item.id) {
-				setItemProps({
-					left: dragData.value.x,
-					top: dragData.value.y,
-					zIndex: index,
-					transform: `rotate(${dragData.value.rotation}deg)`,
-				});
-			}
-		});
-		return unsubscribe;
+		return dragListener("localUpdated", presence.drag);
 	}, []);
+
+	const dragListener = (
+		event: "localUpdated" | "updated",
+		drag: DragManager<DragAndRotatePackage>,
+	) => {
+		const unsubscribe = drag.events.on(
+			event,
+			(dragData: { value: DragAndRotatePackage | null }) => {
+				if (dragData.value && dragData.value.id === item.id) {
+					setItemProps({
+						left: dragData.value.x,
+						top: dragData.value.y,
+						zIndex: index,
+						transform: `rotate(${dragData.value.rotation}deg)`,
+					});
+				}
+			},
+		);
+		return unsubscribe;
+	};
 
 	useEffect(() => {
 		const unsubscribe = presence.selection.events.on("localUpdated", () => {
@@ -81,6 +86,13 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 
 	useEffect(() => {
 		const unsubscribe = presence.selection.events.on("updated", () => {
+			setRemoteSelected(presence.selection.testRemoteSelection({ id: item.id }));
+		});
+		return unsubscribe;
+	}, []);
+
+	useEffect(() => {
+		const unsubscribe = presence.selection.clients.events.on("attendeeDisconnected", () => {
 			setRemoteSelected(presence.selection.testRemoteSelection({ id: item.id }));
 		});
 		return unsubscribe;
@@ -110,11 +122,8 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 	};
 
 	const getOffsetCoordinates = (e: React.DragEvent<HTMLDivElement>): { x: number; y: number } => {
-		const canvasElement = document.getElementById("canvas");
-		const canvasRect = canvasElement?.getBoundingClientRect() || { left: 0, top: 0 };
-		const newX = e.pageX - canvasRect.left;
-		const newY = e.pageY - canvasRect.top;
-		const coordinates = { x: newX - offset.x, y: newY - offset.y };
+		const mouseCoordinates = calculateCanvasMouseCoordinates(e);
+		const coordinates = { x: mouseCoordinates.x - offset.x, y: mouseCoordinates.y - offset.y };
 		coordinates.x = coordinates.x < 0 ? itemProps.left : coordinates.x;
 		coordinates.y = coordinates.y < 0 ? itemProps.top : coordinates.y;
 		return coordinates;
