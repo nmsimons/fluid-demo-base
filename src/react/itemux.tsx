@@ -16,6 +16,7 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 	const { item, index } = props;
 	const [offset, setOffset] = useState({ x: 0, y: 0 });
 	const [selected, setSelected] = useState(false);
+	const [remoteSelected, setRemoteSelected] = useState<string[]>([]);
 
 	const [itemProps, setItemProps] = useState<{
 		left: number;
@@ -78,6 +79,13 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 		return unsubscribe;
 	}, []);
 
+	useEffect(() => {
+		const unsubscribe = presence.selection.events.on("updated", () => {
+			setRemoteSelected(presence.selection.testRemoteSelection({ id: item.id }));
+		});
+		return unsubscribe;
+	}, []);
+
 	const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
 		e.stopPropagation();
 		const { x, y } = getOffsetCoordinates(e);
@@ -134,6 +142,7 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 			style={{ ...itemProps }}
 		>
 			<SelectionBox selected={selected} item={item} />
+			<PresenceBox remoteSelected={remoteSelected.length > 0} />
 			{getContentElement(item)}
 		</div>
 	);
@@ -183,13 +192,30 @@ const calculateOffsetFromCenter = (
 	};
 };
 
+export function PresenceBox(props: { remoteSelected: boolean }): JSX.Element {
+	const { remoteSelected } = props;
+	const padding = 8;
+	return (
+		<div
+			className={`absolute border-4 border-dashed border-black opacity-40 bg-transparent ${remoteSelected ? "" : " hidden"}`}
+			style={{
+				left: -padding,
+				top: -padding,
+				width: `calc(100% + ${padding * 2}px)`,
+				height: `calc(100% + ${padding * 2}px)`,
+				zIndex: 1000,
+			}}
+		></div>
+	);
+}
+
 export function SelectionBox(props: { selected: boolean; item: Item }): JSX.Element {
 	const { selected, item } = props;
 	const padding = 8;
 
 	return (
 		<div
-			className={`absolute border-4 border-dashed border-blue-800 bg-transparent ${selected ? "" : " hidden"}`}
+			className={`absolute border-4 border-dashed border-black bg-transparent ${selected ? "" : " hidden"}`}
 			style={{
 				left: -padding,
 				top: -padding,
@@ -210,7 +236,7 @@ export function SelectionControls(props: { item: Item; padding: number }): JSX.E
 
 	return (
 		<div
-			className={`absolute flex flex-row justify-items-center items-center w-full bg-blue-800 border-4 border-blue-800`}
+			className={`absolute flex flex-row justify-items-center items-center w-full bg-black border-4 border-black`}
 			style={{
 				left: -padding / 2,
 				top: -(height + 2) - padding,
@@ -240,7 +266,7 @@ export function DragHandle(props: { item: Item }): JSX.Element {
 		e.preventDefault();
 
 		const o = calculateOffsetFromCenter(e, item);
-		const center = { x: item.content.width / 2, y: item.content.height / 2 };
+		const center = { x: item.content.size / 2, y: item.content.size / 2 };
 		const angleInRadians = Math.atan2(o.y - center.y, o.x - center.x);
 		const angleInDegrees = (angleInRadians * 180) / Math.PI + 90;
 
@@ -295,7 +321,7 @@ export function DragHandle(props: { item: Item }): JSX.Element {
 				onDragEnd={(e) => handleDragEnd(e)}
 				onMouseMove={(e) => handleRotate(e)}
 				draggable="true"
-				className={`bg-red-800 border-4 border-red-800`}
+				className={`bg-red-800 border-4 border-black`}
 			></div>
 		</div>
 	);

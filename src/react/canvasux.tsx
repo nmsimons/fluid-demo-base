@@ -5,7 +5,7 @@
  */
 
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { Items, Item } from "../schema/app_schema.js";
+import { Items, Item, Group } from "../schema/app_schema.js";
 import { IFluidContainer, Tree } from "fluid-framework";
 import { PresenceContext } from "./PresenceContext.js";
 import { ItemView } from "./itemux.js";
@@ -16,8 +16,7 @@ export function Canvas(props: {
 	setSize: (width: number, height: number) => void;
 }): JSX.Element {
 	const { items, setSize } = props;
-	const [itemsArray, setItemsArray] = React.useState<Item[]>(items.slice());
-	const [dragging, setDragging] = useState(false);
+	const [itemsArray, setItemsArray] = React.useState<(Item | Group)[]>(items.slice());
 	const presence = useContext(PresenceContext);
 
 	const canvasRef = React.useRef<HTMLDivElement>(null);
@@ -60,11 +59,11 @@ export function Canvas(props: {
 				e.preventDefault();
 				e.dataTransfer.dropEffect = "move";
 			}}
-			className="relative flex h-full w-full bg-transparent overflow-auto"
+			className="relative flex h-full w-full bg-transparent overflow-auto "
 		>
-			{itemsArray.map((item, index) => (
-				<ItemView item={item} key={index} index={index} />
-			))}
+			{itemsArray.map((item, index) =>
+				item instanceof Item ? <ItemView item={item} key={index} index={index} /> : <></>,
+			)}
 		</div>
 	);
 }

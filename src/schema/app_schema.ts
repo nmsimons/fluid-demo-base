@@ -21,8 +21,7 @@ import { Table } from "./table_schema.js";
 const sf = new SchemaFactory("fc1db2e8-0a00-11ee-be56-0242ac120002");
 
 export class Shape extends sf.object("Shape", {
-	width: sf.number, // The width is a number that represents the width of the shape
-	height: sf.number, // The height is a number that represents the height of the shape
+	size: sf.number, // The size is a number that represents the width and height of the shape
 	color: sf.string, // The color is a string that represents the color of the shape
 	type: sf.string, // The shapeType is a string that represents the type of the shape
 }) {} // The size is a number that represents the size of the shape
@@ -35,7 +34,14 @@ export class Item extends sf.object("Item", {
 	content: [Shape],
 }) {}
 
-export class Items extends sf.array("Items", [Item]) {}
+export class Group extends sf.object("Group", {
+	id: sf.identifier,
+	x: sf.number,
+	y: sf.number,
+	content: sf.array([Item]),
+}) {}
+
+export class Items extends sf.array("Items", [Item, Group]) {}
 
 /**
  * A SharedTree object date-time

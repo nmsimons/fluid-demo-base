@@ -51,15 +51,14 @@ export function NewShapeButton(props: {
 }): JSX.Element {
 	const { items, canvasSize } = props;
 
-	const maxSize = 100;
-	const minSize = 20;
+	const maxSize = 120;
+	const minSize = 100;
 
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		const shape = new Shape({
-			width: getRandomNumber(minSize, maxSize),
-			height: getRandomNumber(minSize, maxSize),
-			color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+			size: getRandomNumber(minSize, maxSize),
+			color: ["red", "green", "blue", "orange", "purple"][Math.floor(Math.random() * 5)],
 			// Type is randomly selected from "circle", "square", "triangle", or "star"
 			type: ["circle", "square", "triangle", "star"][Math.floor(Math.random() * 4)],
 		});
@@ -67,7 +66,9 @@ export function NewShapeButton(props: {
 			x: getRandomNumber(0, canvasSize.width - maxSize - minSize),
 			y: getRandomNumber(0, canvasSize.height - maxSize - minSize),
 			content: shape,
-			rotation: Math.floor(Math.random() * 360),
+			// a random number between 0 and 15
+			rotation:
+				getRandomNumber(0, 1) === 0 ? getRandomNumber(0, 15) : getRandomNumber(345, 360),
 		});
 		items.insertAtEnd(item);
 	};
