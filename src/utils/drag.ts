@@ -11,20 +11,19 @@ import {
 	ClientConnectionId,
 } from "@fluidframework/presence/alpha";
 import { Listenable } from "fluid-framework";
-import { DragManager, DragPackage } from "./Interfaces/DragManager.js";
-import { PresenceManager } from "./Interfaces/PresenceManager.js";
+import { DragManager } from "./Interfaces/DragManager.js";
 
 // with the given presence and workspace.
 export function createDragManager(props: {
 	presence: Presence;
 	workspace: Workspace<{}>;
 	name: string;
-}): DragManager {
+}): DragManager<DragAndRotatePackage> {
 	const { presence, workspace, name } = props;
 
-	class DragManagerImpl implements PresenceManager<DragPackage | null> {
-		initialState: DragPackage | null = null;
-		state: LatestState<DragPackage | null>;
+	class DragManagerImpl implements DragManager<DragAndRotatePackage> {
+		initialState: DragAndRotatePackage | null = null;
+		state: LatestState<DragAndRotatePackage | null>;
 
 		constructor(
 			name: string,
@@ -32,7 +31,7 @@ export function createDragManager(props: {
 			private presence: Presence,
 		) {
 			// @ts-expect-error - This is a known issue with the latestStateFactory type
-			workspace.add(name, latestStateFactory<DragPackage | null>(this.initialState));
+			workspace.add(name, latestStateFactory<DragAndRotatePackage | null>(this.initialState));
 			this.state = workspace.props[name];
 		}
 
@@ -44,12 +43,12 @@ export function createDragManager(props: {
 			events: this.presence.events,
 		};
 
-		public get events(): Listenable<LatestStateEvents<DragPackage | null>> {
+		public get events(): Listenable<LatestStateEvents<DragAndRotatePackage | null>> {
 			return this.state.events;
 		}
 
 		/** Indicate that an item is being dragged */
-		public setDragging(target: DragPackage) {
+		public setDragging(target: DragAndRotatePackage) {
 			this.state.local = target;
 		}
 
@@ -61,3 +60,10 @@ export function createDragManager(props: {
 
 	return new DragManagerImpl(name, workspace, presence);
 }
+
+export type DragAndRotatePackage = {
+	id: string;
+	x: number;
+	y: number;
+	rotation: number;
+};

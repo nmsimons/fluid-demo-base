@@ -27,6 +27,7 @@ import {
 import { User, UsersManager } from "../utils/Interfaces/UsersManager.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { DragManager } from "../utils/Interfaces/DragManager.js";
+import { DragAndRotatePackage } from "../utils/drag.js";
 
 export function ReactApp(props: {
 	tree: TreeView<typeof Items>;
@@ -34,7 +35,7 @@ export function ReactApp(props: {
 	users: UsersManager;
 	container: IFluidContainer;
 	undoRedo: undoRedo;
-	drag: DragManager;
+	drag: DragManager<DragAndRotatePackage>;
 }): JSX.Element {
 	const { tree, selection, users, container, undoRedo, drag } = props;
 	const [connectionState, setConnectionState] = useState("");
