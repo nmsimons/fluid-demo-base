@@ -3,15 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import {
-	TreeViewConfiguration,
-	SchemaFactory,
-	TreeNodeFromImplicitAllowedTypes,
-	NodeFromSchema,
-	Tree,
-	TreeStatus,
-} from "fluid-framework";
-import { Table } from "./table_schema.js";
+import { TreeViewConfiguration, SchemaFactory, Tree } from "fluid-framework";
 
 // Schema is defined using a factory object that generates classes for objects as well
 // as list and map nodes.
@@ -133,50 +125,6 @@ export class Vote extends sf.object("Vote", {
 		return this.votes.includes(userId);
 	}
 }
-
-export type typeDefinition = TreeNodeFromImplicitAllowedTypes<typeof schemaTypes>;
-const schemaTypes = [sf.string, sf.number, sf.boolean, DateTime, Vote] as const;
-
-const tableFactory = new SchemaFactory(sf.scope + "/table1");
-export class FluidTable extends Table({
-	sf: tableFactory,
-	schemaTypes,
-}) {
-	/**
-	 * Get a cell by the synthetic id
-	 * @param id The synthetic id of the cell
-	 */
-	getColumnByCellId(id: `${string}_${string}`) {
-		const [, columnId] = id.split("_");
-		const column = this.getColumn(columnId);
-		if (column === undefined) {
-			return undefined;
-		}
-		return column;
-	}
-
-	/**
-	 * Create a Row before inserting it into the table
-	 * */
-	createDetachedRow(): FluidRow {
-		return new FluidTable.Row({ _cells: {}, props: null });
-	}
-
-	/**
-	 * Delete a column and all of its cells
-	 * @param column The column to delete
-	 */
-	deleteColumn(column: FluidColumn): void {
-		if (Tree.status(column) !== TreeStatus.InDocument) return;
-		Tree.runTransaction(this, () => {
-			for (const row of this.rows) {
-				row.deleteCell(column);
-			}
-			this.removeColumn(column);
-		});
-	}
-}
-
 export class Comment extends sf.object("Comment", {
 	id: sf.identifier,
 	text: sf.string,
@@ -212,9 +160,6 @@ export class Group extends sf.object("Group", {
 }) {}
 
 export class Items extends sf.array("Items", [Item, Group]) {}
-
-export type FluidRow = NodeFromSchema<typeof FluidTable.Row>;
-export type FluidColumn = NodeFromSchema<typeof FluidTable.Column>;
 
 export type HintValues = (typeof hintValues)[keyof typeof hintValues];
 export const hintValues = {
