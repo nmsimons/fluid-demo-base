@@ -278,7 +278,6 @@ export function ItemToolbar(props: { item: Item }): JSX.Element {
 		>
 			<ToolbarGroup role="presentation">
 				<VoteButton vote={item.votes} />
-				<CommentButton item={item} />
 			</ToolbarGroup>
 			<ToolbarGroup role="presentation">
 				<DeleteButton
