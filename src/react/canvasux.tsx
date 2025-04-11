@@ -23,7 +23,6 @@ export function Canvas(props: {
 
 	useEffect(() => {
 		const unsubscribe = Tree.on(items, "nodeChanged", () => {
-			console.log("items changed");
 			setItemsArray(items.slice());
 		});
 		return unsubscribe;

@@ -5,13 +5,13 @@ import React, { useState } from "react";
 import { Pane } from "./paneux.js";
 import { asTreeViewAlpha, TreeView, TreeBranch } from "@fluidframework/tree/alpha";
 import { createFunctioningAgent } from "@fluidframework/tree-agent/alpha";
-import { Items } from "../schema/app_schema.js";
+import { App } from "../schema/app_schema.js";
 import { ChatOpenAI } from "@langchain/openai";
 
 export function PromptPane(props: {
 	hidden: boolean;
 	setHidden: (hidden: boolean) => void;
-	view: TreeView<typeof Items>;
+	view: TreeView<typeof App>;
 }): JSX.Element {
 	const { hidden, setHidden } = props;
 	const [response, setResponse] = useState("");

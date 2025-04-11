@@ -4,13 +4,13 @@
  */
 
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { Items } from "../schema/app_schema.js";
+import { App } from "../schema/app_schema.js";
 import "../output.css";
 import { ConnectionState, IFluidContainer, TreeView } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
-import { UndoButton, RedoButton, NewShapeButton, PromptButton } from "./buttonux.js";
+import { UndoButton, RedoButton, NewShapeButton, ShowPaneButton } from "./buttonux.js";
 import {
 	Avatar,
 	AvatarGroup,
@@ -30,9 +30,11 @@ import { DragManager } from "../utils/Interfaces/DragManager.js";
 import { DragAndRotatePackage } from "../utils/drag.js";
 import { PromptPane } from "./promptux.js";
 import { TypedSelection } from "../utils/selection.js";
+import { CommentPane } from "./commentux.js";
+import { ChatFilled, ChatRegular, CommentFilled, CommentRegular } from "@fluentui/react-icons";
 
 export function ReactApp(props: {
-	tree: TreeView<typeof Items>;
+	tree: TreeView<typeof App>;
 	selection: SelectionManager<TypedSelection>;
 	users: UsersManager;
 	container: IFluidContainer;
@@ -44,6 +46,8 @@ export function ReactApp(props: {
 	const [saved, setSaved] = useState(false);
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 	const [promptPaneHidden, setPromptPaneHidden] = useState(false);
+	const [commentPaneHidden, setCommentPaneHidden] = useState(true);
+	const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined);
 
 	useEffect(() => {
 		const updateConnectionState = () => {
@@ -71,6 +75,17 @@ export function ReactApp(props: {
 		return undoRedo.dispose;
 	}, []);
 
+	useEffect(() => {
+		const unsubscribe = selection.events.on("localUpdated", () => {
+			setSelectedItemId(
+				selection.getLocalSelection().length !== 0
+					? selection.getLocalSelection()[0].id
+					: undefined,
+			);
+		});
+		return unsubscribe;
+	}, []);
+
 	return (
 		<PresenceContext.Provider
 			value={{
@@ -86,13 +101,23 @@ export function ReactApp(props: {
 				<Header saved={saved} connectionState={connectionState} />
 				<Toolbar className="h-[48px] shadow-lg">
 					<ToolbarGroup>
-						<NewShapeButton items={tree.root} canvasSize={canvasSize} />
+						<NewShapeButton items={tree.root.items} canvasSize={canvasSize} />
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
-						<PromptButton
+						<ShowPaneButton
+							hiddenIcon={<CommentRegular />}
+							shownIcon={<CommentFilled />}
+							hidePane={setCommentPaneHidden}
+							paneHidden={commentPaneHidden}
+							tooltip="Comments"
+						/>
+						<ShowPaneButton
+							hiddenIcon={<ChatRegular />}
+							shownIcon={<ChatFilled />}
 							hidePane={setPromptPaneHidden}
 							paneHidden={promptPaneHidden}
+							tooltip="AI Chat"
 						/>
 					</ToolbarGroup>
 					<ToolbarDivider />
@@ -103,9 +128,15 @@ export function ReactApp(props: {
 				</Toolbar>
 				<div className="flex h-[calc(100vh-96px)] w-full flex-row ">
 					<Canvas
-						items={tree.root}
+						items={tree.root.items}
 						container={container}
 						setSize={(width, height) => setCanvasSize({ width, height })}
+					/>
+					<CommentPane
+						selectedItemId={selectedItemId}
+						hidden={commentPaneHidden}
+						setHidden={setCommentPaneHidden}
+						app={tree.root}
 					/>
 					<PromptPane
 						hidden={promptPaneHidden}

@@ -3,15 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import {
-	TreeViewConfiguration,
-	SchemaFactory,
-	TreeNodeFromImplicitAllowedTypes,
-	NodeFromSchema,
-	Tree,
-	TreeStatus,
-} from "fluid-framework";
-import { Table } from "./table_schema.js";
+import { TreeViewConfiguration, SchemaFactory, Tree } from "fluid-framework";
 
 // Schema is defined using a factory object that generates classes for objects as well
 // as list and map nodes.
@@ -49,30 +41,6 @@ export class DateTime extends sf.object("DateTime", {
 		}
 		this.raw = value.getTime();
 	}
-}
-
-export class Note extends sf.object(
-	"Note",
-	// Fields for Notes which SharedTree will store and synchronize across clients.
-	// These fields are exposed as members of instances of the Note class.
-	{
-		id: sf.identifier,
-		text: sf.string,
-		author: sf.string,
-		/**
-		 * Sequence of user ids to track which users have voted on this note.
-		 */
-		votes: sf.array(sf.string),
-	},
-) {
-	public readonly toggleVote = (user: string) => {
-		const index = this.votes.indexOf(user);
-		if (index > -1) {
-			this.votes.removeAt(index);
-		} else {
-			this.votes.insertAtEnd(user);
-		}
-	};
 }
 
 /**
@@ -133,64 +101,55 @@ export class Vote extends sf.object("Vote", {
 		return this.votes.includes(userId);
 	}
 }
-
-export type typeDefinition = TreeNodeFromImplicitAllowedTypes<typeof schemaTypes>;
-const schemaTypes = [sf.string, sf.number, sf.boolean, DateTime, Vote] as const;
-
-const tableFactory = new SchemaFactory(sf.scope + "/table1");
-export class FluidTable extends Table({
-	sf: tableFactory,
-	schemaTypes,
-}) {
-	/**
-	 * Get a cell by the synthetic id
-	 * @param id The synthetic id of the cell
-	 */
-	getColumnByCellId(id: `${string}_${string}`) {
-		const [, columnId] = id.split("_");
-		const column = this.getColumn(columnId);
-		if (column === undefined) {
-			return undefined;
-		}
-		return column;
-	}
-
-	/**
-	 * Create a Row before inserting it into the table
-	 * */
-	createDetachedRow(): FluidRow {
-		return new FluidTable.Row({ _cells: {}, props: null });
-	}
-
-	/**
-	 * Delete a column and all of its cells
-	 * @param column The column to delete
-	 */
-	deleteColumn(column: FluidColumn): void {
-		if (Tree.status(column) !== TreeStatus.InDocument) return;
-		Tree.runTransaction(this, () => {
-			for (const row of this.rows) {
-				row.deleteCell(column);
-			}
-			this.removeColumn(column);
-		});
-	}
-}
-
 export class Comment extends sf.object("Comment", {
 	id: sf.identifier,
 	text: sf.string,
 	userId: sf.string,
 	votes: Vote,
 	createdAt: DateTime,
-}) {}
+}) {
+	delete(): void {
+		const parent = Tree.parent(this);
+		if (Tree.is(parent, Comments)) {
+			parent.removeAt(parent.indexOf(this));
+		}
+	}
+}
+
+export class Comments extends sf.array("Comments", [Comment]) {
+	addComment(text: string, userId: string): void {
+		const comment = new Comment({
+			text,
+			userId,
+			votes: new Vote({ votes: [] }),
+			createdAt: new DateTime({ raw: Date.now() }),
+		});
+		this.insertAtEnd(comment);
+	}
+}
+
+export class Note extends sf.object(
+	"Note",
+	// Fields for Notes which SharedTree will store and synchronize across clients.
+	// These fields are exposed as members of instances of the Note class.
+	{
+		id: sf.identifier,
+		text: sf.string,
+		author: sf.string,
+		/**
+		 * Sequence of user ids to track which users have voted on this note.
+		 */
+		votes: Vote,
+		comments: Comments,
+	},
+) {}
 
 export class Item extends sf.object("Item", {
 	id: sf.identifier,
 	x: sf.number,
 	y: sf.number,
 	rotation: sf.number,
-	comments: sf.array(Comment),
+	comments: Comments,
 	votes: Vote,
 	content: [Shape, Note],
 }) {
@@ -208,13 +167,16 @@ export class Group extends sf.object("Group", {
 	id: sf.identifier,
 	x: sf.number,
 	y: sf.number,
+	comments: Comments,
 	content: sf.array([Item]),
 }) {}
 
 export class Items extends sf.array("Items", [Item, Group]) {}
 
-export type FluidRow = NodeFromSchema<typeof FluidTable.Row>;
-export type FluidColumn = NodeFromSchema<typeof FluidTable.Column>;
+export class App extends sf.object("App", {
+	items: Items,
+	comments: Comments,
+}) {}
 
 export type HintValues = (typeof hintValues)[keyof typeof hintValues];
 export const hintValues = {
@@ -231,5 +193,5 @@ export const hintValues = {
  * */
 export const appTreeConfiguration = new TreeViewConfiguration(
 	// Schema for the root
-	{ schema: Items },
+	{ schema: App },
 );
