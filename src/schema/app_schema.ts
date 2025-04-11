@@ -43,30 +43,6 @@ export class DateTime extends sf.object("DateTime", {
 	}
 }
 
-export class Note extends sf.object(
-	"Note",
-	// Fields for Notes which SharedTree will store and synchronize across clients.
-	// These fields are exposed as members of instances of the Note class.
-	{
-		id: sf.identifier,
-		text: sf.string,
-		author: sf.string,
-		/**
-		 * Sequence of user ids to track which users have voted on this note.
-		 */
-		votes: sf.array(sf.string),
-	},
-) {
-	public readonly toggleVote = (user: string) => {
-		const index = this.votes.indexOf(user);
-		if (index > -1) {
-			this.votes.removeAt(index);
-		} else {
-			this.votes.insertAtEnd(user);
-		}
-	};
-}
-
 /**
  * A SharedTree object that allows users to vote
  */
@@ -151,6 +127,22 @@ export class Comments extends sf.array("Comments", [Comment]) {
 		this.insertAtEnd(comment);
 	}
 }
+
+export class Note extends sf.object(
+	"Note",
+	// Fields for Notes which SharedTree will store and synchronize across clients.
+	// These fields are exposed as members of instances of the Note class.
+	{
+		id: sf.identifier,
+		text: sf.string,
+		author: sf.string,
+		/**
+		 * Sequence of user ids to track which users have voted on this note.
+		 */
+		votes: Vote,
+		comments: Comments,
+	},
+) {}
 
 export class Item extends sf.object("Item", {
 	id: sf.identifier,
