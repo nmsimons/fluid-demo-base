@@ -3,7 +3,7 @@ import { Button, Textarea } from "@fluentui/react-components";
 import React, { useContext, useEffect, useState } from "react";
 import { Pane } from "./paneux.js";
 import { PresenceContext } from "./PresenceContext.js";
-import { App, Comment, Comments } from "../schema/app_schema.js";
+import { App, Comment, Comments, Group, Item, Shape } from "../schema/app_schema.js";
 import { Tree } from "fluid-framework";
 
 export function CommentPane(props: {
@@ -17,9 +17,23 @@ export function CommentPane(props: {
 	const [newComment, setNewComment] = useState("");
 	const [commentArray, setCommentArray] = useState<Comment[]>([]);
 	const [comments, setComments] = useState<Comments>();
+	const [title, setTitle] = useState("Comments");
 
 	useEffect(() => {
-		setComments(getComments(selectedItemId, app));
+		const target = getCommentTarget(selectedItemId, app);
+		setComments(target.comments);
+		if (target instanceof Group) {
+			setTitle("Group Comments");
+		} else if (target instanceof Item) {
+			const content = target.content;
+			if (content instanceof Shape) {
+				setTitle(`Comments on ${content.type}`);
+			} else {
+				setTitle("Item comments");
+			}
+		} else {
+			setTitle("General comments");
+		}
 	}, [selectedItemId]);
 
 	useEffect(() => {
@@ -41,7 +55,7 @@ export function CommentPane(props: {
 	};
 
 	return (
-		<Pane hidden={hidden} setHidden={setHidden} title="Comments">
+		<Pane hidden={hidden} setHidden={setHidden} title={title}>
 			<div className="flex flex-col space-y-2">
 				<Textarea
 					style={{ marginBottom: "8px" }}
@@ -65,21 +79,8 @@ export function CommentPane(props: {
 	);
 }
 
-const getComments = (id: string | undefined, app: App): Comments => {
-	if (id === undefined) return app.comments;
+const getCommentTarget = (id: string | undefined, app: App): Item | Group | App => {
+	if (id === undefined) return app;
 	const item = app.items.find((i) => i.id === id);
-	return item ? item.comments : app.comments;
+	return item ? item : app;
 };
-
-export function EmptyCommentsPane(props: {
-	hidden: boolean;
-	setHidden: (hidden: boolean) => void;
-}): JSX.Element {
-	const { hidden, setHidden } = props;
-
-	return (
-		<Pane hidden={hidden} setHidden={setHidden} title="Comments">
-			Select an item to comment on it.
-		</Pane>
-	);
-}
