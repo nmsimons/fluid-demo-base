@@ -3,19 +3,28 @@ import { Button, Textarea } from "@fluentui/react-components";
 import { ArrowLeftFilled } from "@fluentui/react-icons";
 import React, { useState } from "react";
 import { Pane } from "./paneux.js";
+import { asTreeViewAlpha, TreeView, TreeBranch } from "@fluidframework/tree/alpha";
+import { createFunctioningAgent } from "@fluidframework/tree-agent/alpha";
+import { Items } from "../schema/app_schema.js";
+import { ChatOpenAI } from "@langchain/openai";
 
-export function PromptPane(): JSX.Element {
+export function PromptPane(props: { view: TreeView<typeof Items> }): JSX.Element {
 	const [response, setResponse] = useState("");
+	const [branch, setBranch] = useState<TreeBranch | undefined>();
 
-	const handlePromptSubmit = (prompt: string) => {
-		// Simulate an API call to get a response from the LLM
-		setResponse(`Response to: ${prompt}`);
+	const handlePromptSubmit = async (prompt: string) => {
+		const client = new ChatOpenAI();
+		const branch = asTreeViewAlpha(props.view).fork();
+		setBranch(branch);
+		const agent = createFunctioningAgent(client, branch);
+		const response = await agent.query(prompt);
+		setResponse(response ?? "LLM query failed.");
 	};
 
-	const handleApplyResponse = (res: string) => {
-		// Apply the response to the document or state as needed
-		// simluate applying response
-		console.log("Applying response:", res);
+	const handleApplyResponse = () => {
+		if (branch !== undefined) {
+			asTreeViewAlpha(props.view).merge(branch);
+		}
 	};
 
 	return (

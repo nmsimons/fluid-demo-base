@@ -99,7 +99,7 @@ export function ReactApp(props: {
 						container={container}
 						setSize={(width, height) => setCanvasSize({ width, height })}
 					/>
-					<PromptPane />
+					<PromptPane view={tree} />
 				</div>
 			</div>
 		</PresenceContext.Provider>

@@ -33,6 +33,8 @@
 		"@fluidframework/presence": "0.0.0-332145-test",
 		"@fluidframework/telemetry-utils": "0.0.0-332145-test",
 		"@fluidframework/test-runtime-utils": "0.0.0-332145-test",
+		"@fluidframework/tree-agent": "0.0.0-332145-test",
+		"@langchain/openai": "^0.5.2",
 		"@microsoft/microsoft-graph-client": "^3.0.7",
 		"@tailwindcss/vite": "^4.0.9",
 		"@tanstack/react-table": "^8.20.6",
