@@ -14,6 +14,7 @@ import {
 	ThumbLikeRegular,
 	CommentRegular,
 	CommentFilled,
+	ChatFilled,
 } from "@fluentui/react-icons";
 import { ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { PresenceContext } from "./PresenceContext.js";
@@ -135,6 +136,10 @@ export function CommentButton(props: { item: Item }): JSX.Element {
 			tooltip="Add Comment"
 		/>
 	);
+}
+
+export function PromptButton(props: { onClick: (e: React.MouseEvent) => void }): JSX.Element {
+	return <TooltipButton {...props} icon={<ChatFilled />} />;
 }
 
 export function TooltipButton(props: {

@@ -2,6 +2,7 @@
 import { Button, Textarea } from "@fluentui/react-components";
 import { ArrowLeftFilled } from "@fluentui/react-icons";
 import React, { useState } from "react";
+import { Pane } from "./paneux.js";
 
 export function PromptPane(): JSX.Element {
 	const [response, setResponse] = useState("");
@@ -18,13 +19,10 @@ export function PromptPane(): JSX.Element {
 	};
 
 	return (
-		<div
-			id="prompt-pane"
-			className="flex flex-col bg-gray-100 p-4 h-full max-w-80 min-w-80 border-l border-gray-300"
-		>
+		<Pane hidden={false} title="Prompt">
 			<PromptOutput response={response} applyResponse={handleApplyResponse} />
 			<PromptInput callback={handlePromptSubmit} />
-		</div>
+		</Pane>
 	);
 }
 
