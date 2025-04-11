@@ -14,8 +14,6 @@ import {
 	ThumbLikeRegular,
 	CommentRegular,
 	CommentFilled,
-	ChatFilled,
-	ChatRegular,
 } from "@fluentui/react-icons";
 import { ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { PresenceContext } from "./PresenceContext.js";
@@ -142,16 +140,19 @@ export function CommentButton(props: { item: Item }): JSX.Element {
 	);
 }
 
-export function PromptButton(props: {
+export function ShowPaneButton(props: {
 	hidePane: (hidden: boolean) => void;
 	paneHidden: boolean;
+	hiddenIcon: JSX.Element;
+	shownIcon: JSX.Element;
+	tooltip?: string;
 }): JSX.Element {
-	const { hidePane, paneHidden } = props;
+	const { hidePane, paneHidden, hiddenIcon, shownIcon, tooltip } = props;
 	return (
 		<TooltipButton
 			onClick={() => hidePane(!paneHidden)}
-			icon={paneHidden ? <ChatRegular /> : <ChatFilled />}
-			tooltip={paneHidden ? "Show AI Chat" : "Hide AI Chat"}
+			icon={paneHidden ? hiddenIcon : shownIcon}
+			tooltip={paneHidden ? `Show ${tooltip}` : `Hide ${tooltip}`}
 		/>
 	);
 }
