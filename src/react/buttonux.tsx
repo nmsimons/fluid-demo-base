@@ -15,6 +15,7 @@ import {
 	CommentRegular,
 	CommentFilled,
 	ChatFilled,
+	ChatRegular,
 } from "@fluentui/react-icons";
 import { ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { PresenceContext } from "./PresenceContext.js";
@@ -81,15 +82,18 @@ const getRandomNumber = (min: number, max: number): number => {
 };
 
 export function UndoButton(props: { undo: () => void }): JSX.Element {
-	return <TooltipButton tooltip="Undo" onClick={() => props.undo()} icon={<ArrowUndoFilled />} />;
+	const { undo } = props;
+	return <TooltipButton tooltip="Undo" onClick={() => undo()} icon={<ArrowUndoFilled />} />;
 }
 
 export function RedoButton(props: { redo: () => void }): JSX.Element {
-	return <TooltipButton onClick={() => props.redo()} icon={<ArrowRedoFilled />} tooltip="Redo" />;
+	const { redo } = props;
+	return <TooltipButton onClick={() => redo()} icon={<ArrowRedoFilled />} tooltip="Redo" />;
 }
 
 export function DeleteButton(props: { delete: () => void }): JSX.Element {
-	return <IconButton onClick={() => props.delete()} icon={<DismissFilled />} />;
+	const { delete: deleteFunc } = props;
+	return <IconButton onClick={() => deleteFunc()} icon={<DismissFilled />} />;
 }
 
 export function VoteButton(props: { vote: Vote }): JSX.Element {
@@ -138,8 +142,18 @@ export function CommentButton(props: { item: Item }): JSX.Element {
 	);
 }
 
-export function PromptButton(props: { onClick: (e: React.MouseEvent) => void }): JSX.Element {
-	return <TooltipButton {...props} icon={<ChatFilled />} />;
+export function PromptButton(props: {
+	hidePane: (hidden: boolean) => void;
+	paneHidden: boolean;
+}): JSX.Element {
+	const { hidePane, paneHidden } = props;
+	return (
+		<TooltipButton
+			onClick={() => hidePane(!paneHidden)}
+			icon={paneHidden ? <ChatRegular /> : <ChatFilled />}
+			tooltip={paneHidden ? "Show AI Chat" : "Hide AI Chat"}
+		/>
+	);
 }
 
 export function TooltipButton(props: {

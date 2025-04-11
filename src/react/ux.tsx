@@ -10,7 +10,7 @@ import { ConnectionState, IFluidContainer, TreeView } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
-import { UndoButton, RedoButton, NewShapeButton } from "./buttonux.js";
+import { UndoButton, RedoButton, NewShapeButton, PromptButton } from "./buttonux.js";
 import {
 	Avatar,
 	AvatarGroup,
@@ -43,6 +43,7 @@ export function ReactApp(props: {
 	const [connectionState, setConnectionState] = useState("");
 	const [saved, setSaved] = useState(false);
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+	const [promptPaneHidden, setPromptPaneHidden] = useState(false);
 
 	useEffect(() => {
 		const updateConnectionState = () => {
@@ -89,6 +90,13 @@ export function ReactApp(props: {
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
+						<PromptButton
+							hidePane={setPromptPaneHidden}
+							paneHidden={promptPaneHidden}
+						/>
+					</ToolbarGroup>
+					<ToolbarDivider />
+					<ToolbarGroup>
 						<UndoButton undo={() => undoRedo.undo()} />
 						<RedoButton redo={() => undoRedo.redo()} />
 					</ToolbarGroup>
@@ -99,7 +107,11 @@ export function ReactApp(props: {
 						container={container}
 						setSize={(width, height) => setCanvasSize({ width, height })}
 					/>
-					<PromptPane view={tree} />
+					<PromptPane
+						hidden={promptPaneHidden}
+						setHidden={setPromptPaneHidden}
+						view={tree}
+					/>
 				</div>
 			</div>
 		</PresenceContext.Provider>

@@ -8,7 +8,12 @@ import { createFunctioningAgent } from "@fluidframework/tree-agent/alpha";
 import { Items } from "../schema/app_schema.js";
 import { ChatOpenAI } from "@langchain/openai";
 
-export function PromptPane(props: { view: TreeView<typeof Items> }): JSX.Element {
+export function PromptPane(props: {
+	hidden: boolean;
+	setHidden: (hidden: boolean) => void;
+	view: TreeView<typeof Items>;
+}): JSX.Element {
+	const { hidden, setHidden } = props;
 	const [response, setResponse] = useState("");
 	const [branch, setBranch] = useState<TreeBranch | undefined>();
 
@@ -28,7 +33,7 @@ export function PromptPane(props: { view: TreeView<typeof Items> }): JSX.Element
 	};
 
 	return (
-		<Pane hidden={false} title="Prompt">
+		<Pane hidden={hidden} setHidden={setHidden} title="Prompt">
 			<PromptOutput response={response} applyResponse={handleApplyResponse} />
 			<PromptInput callback={handlePromptSubmit} />
 		</Pane>

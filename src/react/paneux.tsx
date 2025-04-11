@@ -1,24 +1,23 @@
 import { Button } from "@fluentui/react-button";
 import { Text } from "@fluentui/react-components";
 import { DismissFilled } from "@fluentui/react-icons";
-import React, { useState } from "react";
+import React from "react";
 
 export function Pane(props: {
 	children: React.ReactNode;
 	hidden: boolean;
+	setHidden: (hidden: boolean) => void;
 	title: string;
 }): JSX.Element {
-	const { children, hidden, title } = props;
+	const { children, hidden, setHidden, title } = props;
 
-	const [isHidden, setIsHidden] = useState(hidden);
-
-	if (isHidden) {
+	if (hidden) {
 		return <></>;
 	}
 
 	return (
 		<div className="flex flex-col bg-gray-100 p-4 h-full max-w-80 min-w-80 border-l border-gray-300">
-			<PaneTitleBar title={title} onClose={() => setIsHidden(true)} />
+			<PaneTitleBar title={title} onClose={() => setHidden(true)} />
 			{children}
 		</div>
 	);

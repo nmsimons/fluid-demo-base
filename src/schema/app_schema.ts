@@ -79,7 +79,7 @@ export class Note extends sf.object(
  * A SharedTree object that allows users to vote
  */
 export class Vote extends sf.object("Vote", {
-	votes: sf.map(sf.string), // Map of votes
+	votes: sf.array(sf.string), // Map of votes
 }) {
 	/**
 	 * Add a vote to the map of votes
@@ -87,10 +87,10 @@ export class Vote extends sf.object("Vote", {
 	 * @param vote The vote to add
 	 */
 	addVote(vote: string): void {
-		if (this.votes.has(vote)) {
+		if (this.votes.includes(vote)) {
 			return;
 		}
-		this.votes.set(vote, "");
+		this.votes.insertAtEnd(vote);
 	}
 
 	/**
@@ -98,17 +98,18 @@ export class Vote extends sf.object("Vote", {
 	 * @param vote The vote to remove
 	 */
 	removeVote(vote: string): void {
-		if (!this.votes.has(vote)) {
+		if (!this.votes.includes(vote)) {
 			return;
 		}
-		this.votes.delete(vote);
+		const index = this.votes.indexOf(vote);
+		this.votes.removeAt(index);
 	}
 
 	/**
 	 * Toggle a vote in the map of votes
 	 */
 	toggleVote(vote: string): void {
-		if (this.votes.has(vote)) {
+		if (this.votes.includes(vote)) {
 			this.removeVote(vote);
 		} else {
 			this.addVote(vote);
@@ -120,7 +121,7 @@ export class Vote extends sf.object("Vote", {
 	 * @returns The number of votes
 	 */
 	get numberOfVotes(): number {
-		return this.votes.size;
+		return this.votes.length;
 	}
 
 	/**
@@ -129,7 +130,7 @@ export class Vote extends sf.object("Vote", {
 	 * @return Whether the user has voted
 	 */
 	hasVoted(userId: string): boolean {
-		return this.votes.has(userId);
+		return this.votes.includes(userId);
 	}
 }
 
