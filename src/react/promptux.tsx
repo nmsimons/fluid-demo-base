@@ -18,10 +18,10 @@ export function PromptPane(props: {
 	const [branch, setBranch] = useState<TreeBranch | undefined>();
 
 	const handlePromptSubmit = async (prompt: string) => {
-		const client = new ChatOpenAI();
+		const client = new ChatOpenAI({ model: "o3-mini" });
 		const branch = asTreeViewAlpha(props.view).fork();
 		setBranch(branch);
-		const agent = createFunctioningAgent(client, branch);
+		const agent = createFunctioningAgent(client, branch, { log: (msg) => console.log(msg) });
 		const response = await agent.query(prompt);
 		setResponse(response ?? "LLM query failed.");
 	};
@@ -29,6 +29,7 @@ export function PromptPane(props: {
 	const handleApplyResponse = () => {
 		if (branch !== undefined) {
 			asTreeViewAlpha(props.view).merge(branch);
+			setBranch(undefined);
 		}
 	};
 
