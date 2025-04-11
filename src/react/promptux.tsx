@@ -4,7 +4,12 @@ import { ArrowLeftFilled } from "@fluentui/react-icons";
 import React, { useState } from "react";
 import { Pane } from "./paneux.js";
 
-export function PromptPane(): JSX.Element {
+export function PromptPane(props: {
+	hidden: boolean;
+	setHidden: (hidden: boolean) => void;
+}): JSX.Element {
+	const { hidden, setHidden } = props;
+
 	const [response, setResponse] = useState("");
 
 	const handlePromptSubmit = (prompt: string) => {
@@ -19,7 +24,7 @@ export function PromptPane(): JSX.Element {
 	};
 
 	return (
-		<Pane hidden={false} title="Prompt">
+		<Pane hidden={hidden} setHidden={setHidden} title="Prompt">
 			<PromptOutput response={response} applyResponse={handleApplyResponse} />
 			<PromptInput callback={handlePromptSubmit} />
 		</Pane>
