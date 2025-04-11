@@ -189,7 +189,9 @@ const calculateOffsetFromCenter = (
 	item: Item,
 ): { x: number; y: number } => {
 	const coordinates = calculateCanvasMouseCoordinates(e);
-	const rect = e.currentTarget.getBoundingClientRect();
+	const rect =
+		e.currentTarget.parentElement?.getBoundingClientRect() ??
+		e.currentTarget.getBoundingClientRect();
 	const width = rect.width;
 	const height = rect.height;
 	const center = { x: item.x + width / 2, y: item.y + height / 2 };
@@ -275,8 +277,7 @@ export function DragHandle(props: { item: Item }): JSX.Element {
 		e.preventDefault();
 
 		const o = calculateOffsetFromCenter(e, item);
-		const center = { x: item.content.size / 2, y: item.content.size / 2 };
-		const angleInRadians = Math.atan2(o.y - center.y, o.x - center.x);
+		const angleInRadians = Math.atan2(o.y, o.x);
 		const angleInDegrees = (angleInRadians * 180) / Math.PI + 90;
 
 		// Normalize the angle to be between 0 and 360

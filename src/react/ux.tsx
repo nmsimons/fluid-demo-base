@@ -28,6 +28,7 @@ import { User, UsersManager } from "../utils/Interfaces/UsersManager.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { DragManager } from "../utils/Interfaces/DragManager.js";
 import { DragAndRotatePackage } from "../utils/drag.js";
+import { PromptPane } from "./promptux.js";
 
 export function ReactApp(props: {
 	tree: TreeView<typeof Items>;
@@ -97,6 +98,7 @@ export function ReactApp(props: {
 						container={container}
 						setSize={(width, height) => setCanvasSize({ width, height })}
 					/>
+					<PromptPane />
 				</div>
 			</div>
 		</PresenceContext.Provider>

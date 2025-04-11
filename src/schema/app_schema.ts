@@ -26,23 +26,6 @@ export class Shape extends sf.object("Shape", {
 	type: sf.string, // The shapeType is a string that represents the type of the shape
 }) {} // The size is a number that represents the size of the shape
 
-export class Item extends sf.object("Item", {
-	id: sf.identifier,
-	x: sf.number,
-	y: sf.number,
-	rotation: sf.number,
-	content: [Shape],
-}) {}
-
-export class Group extends sf.object("Group", {
-	id: sf.identifier,
-	x: sf.number,
-	y: sf.number,
-	content: sf.array([Item]),
-}) {}
-
-export class Items extends sf.array("Items", [Item, Group]) {}
-
 /**
  * A SharedTree object date-time
  */
@@ -66,6 +49,30 @@ export class DateTime extends sf.object("DateTime", {
 		}
 		this.raw = value.getTime();
 	}
+}
+
+export class Note extends sf.object(
+	"Note",
+	// Fields for Notes which SharedTree will store and synchronize across clients.
+	// These fields are exposed as members of instances of the Note class.
+	{
+		id: sf.identifier,
+		text: sf.string,
+		author: sf.string,
+		/**
+		 * Sequence of user ids to track which users have voted on this note.
+		 */
+		votes: sf.array(sf.string),
+	},
+) {
+	public readonly toggleVote = (user: string) => {
+		const index = this.votes.indexOf(user);
+		if (index > -1) {
+			this.votes.removeAt(index);
+		} else {
+			this.votes.insertAtEnd(user);
+		}
+	};
 }
 
 /**
@@ -168,6 +175,23 @@ export class FluidTable extends Table({
 		});
 	}
 }
+
+export class Item extends sf.object("Item", {
+	id: sf.identifier,
+	x: sf.number,
+	y: sf.number,
+	rotation: sf.number,
+	content: [Shape, Note],
+}) {}
+
+export class Group extends sf.object("Group", {
+	id: sf.identifier,
+	x: sf.number,
+	y: sf.number,
+	content: sf.array([Item]),
+}) {}
+
+export class Items extends sf.array("Items", [Item, Group]) {}
 
 export type FluidRow = NodeFromSchema<typeof FluidTable.Row>;
 export type FluidColumn = NodeFromSchema<typeof FluidTable.Column>;
