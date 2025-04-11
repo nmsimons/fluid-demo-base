@@ -4,7 +4,7 @@
  */
 
 import React, { JSX, useContext } from "react";
-import { Item, Items, Shape, Vote, Comment, DateTime } from "../schema/app_schema.js";
+import { Item, Items, Shape, Vote, Comment, DateTime, Note } from "../schema/app_schema.js";
 import {
 	DismissFilled,
 	ArrowUndoFilled,
@@ -14,6 +14,7 @@ import {
 	ThumbLikeRegular,
 	CommentRegular,
 	CommentFilled,
+	NoteRegular,
 } from "@fluentui/react-icons";
 import { ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { PresenceContext } from "./PresenceContext.js";
@@ -70,6 +71,44 @@ export function NewShapeButton(props: {
 			onClick={(e: React.MouseEvent) => handleClick(e)}
 			icon={<ShapesRegular />}
 			tooltip="Insert a new shape"
+		/>
+	);
+}
+
+export function NewNoteButton(props: {
+	items: Items;
+	canvasSize: { width: number; height: number };
+}): JSX.Element {
+	const { items, canvasSize } = props;
+
+	const presence = useContext(PresenceContext);
+
+	const handleClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
+
+		const note = new Note({
+			text: "",
+			author: presence.users.getMyself().value.id,
+		});
+
+		const item = new Item({
+			x: getRandomNumber(0, canvasSize.width),
+			y: getRandomNumber(0, canvasSize.height),
+			comments: [],
+			votes: new Vote({ votes: [] }),
+			content: note,
+			// a random number between 0 and 15
+			rotation:
+				getRandomNumber(0, 1) === 0 ? getRandomNumber(0, 15) : getRandomNumber(345, 360),
+		});
+
+		items.insertAtEnd(item);
+	};
+	return (
+		<TooltipButton
+			onClick={(e: React.MouseEvent) => handleClick(e)}
+			icon={<NoteRegular />}
+			tooltip="Insert a new note"
 		/>
 	);
 }

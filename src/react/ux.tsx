@@ -10,7 +10,13 @@ import { ConnectionState, IFluidContainer, TreeView } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
-import { UndoButton, RedoButton, NewShapeButton, ShowPaneButton } from "./buttonux.js";
+import {
+	UndoButton,
+	RedoButton,
+	NewShapeButton,
+	ShowPaneButton,
+	NewNoteButton,
+} from "./buttonux.js";
 import {
 	Avatar,
 	AvatarGroup,
@@ -102,6 +108,7 @@ export function ReactApp(props: {
 				<Toolbar className="h-[48px] shadow-lg">
 					<ToolbarGroup>
 						<NewShapeButton items={tree.root.items} canvasSize={canvasSize} />
+						<NewNoteButton items={tree.root.items} canvasSize={canvasSize} />
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>

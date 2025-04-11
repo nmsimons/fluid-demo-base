@@ -1,5 +1,5 @@
 import React, { JSX, useState, useEffect, useContext, useRef } from "react";
-import { Item, Shape } from "../schema/app_schema.js";
+import { Item, Note, Shape } from "../schema/app_schema.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { ShapeView } from "./shapeux.js";
 import { Tree } from "fluid-framework";
@@ -7,10 +7,13 @@ import { DragManager } from "../utils/Interfaces/DragManager.js";
 import { DragAndRotatePackage } from "../utils/drag.js";
 import { DeleteButton, VoteButton } from "./buttonux.js";
 import { Toolbar, ToolbarGroup } from "@fluentui/react-components";
+import { NoteView } from "./noteux.js";
 
 const getContentElement = (item: Item): JSX.Element => {
 	if (Tree.is(item.content, Shape)) {
 		return <ShapeView shape={item.content} />;
+	} else if (Tree.is(item.content, Note)) {
+		return <NoteView note={item.content} />;
 	} else {
 		return <></>;
 	}

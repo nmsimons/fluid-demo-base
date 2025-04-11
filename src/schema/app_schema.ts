@@ -136,11 +136,6 @@ export class Note extends sf.object(
 		id: sf.identifier,
 		text: sf.string,
 		author: sf.string,
-		/**
-		 * Sequence of user ids to track which users have voted on this note.
-		 */
-		votes: Vote,
-		comments: Comments,
 	},
 ) {}
 
