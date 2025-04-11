@@ -131,14 +131,33 @@ export class Comment extends sf.object("Comment", {
 	userId: sf.string,
 	votes: Vote,
 	createdAt: DateTime,
-}) {}
+}) {
+	delete(): void {
+		const parent = Tree.parent(this);
+		if (Tree.is(parent, Comments)) {
+			parent.removeAt(parent.indexOf(this));
+		}
+	}
+}
+
+export class Comments extends sf.array("Comments", [Comment]) {
+	addComment(text: string, userId: string): void {
+		const comment = new Comment({
+			text,
+			userId,
+			votes: new Vote({ votes: [] }),
+			createdAt: new DateTime({ raw: Date.now() }),
+		});
+		this.insertAtEnd(comment);
+	}
+}
 
 export class Item extends sf.object("Item", {
 	id: sf.identifier,
 	x: sf.number,
 	y: sf.number,
 	rotation: sf.number,
-	comments: sf.array(Comment),
+	comments: Comments,
 	votes: Vote,
 	content: [Shape, Note],
 }) {
@@ -156,10 +175,16 @@ export class Group extends sf.object("Group", {
 	id: sf.identifier,
 	x: sf.number,
 	y: sf.number,
+	comments: Comments,
 	content: sf.array([Item]),
 }) {}
 
 export class Items extends sf.array("Items", [Item, Group]) {}
+
+export class App extends sf.object("App", {
+	items: Items,
+	comments: Comments,
+}) {}
 
 export type HintValues = (typeof hintValues)[keyof typeof hintValues];
 export const hintValues = {
@@ -176,5 +201,5 @@ export const hintValues = {
  * */
 export const appTreeConfiguration = new TreeViewConfiguration(
 	// Schema for the root
-	{ schema: Items },
+	{ schema: App },
 );

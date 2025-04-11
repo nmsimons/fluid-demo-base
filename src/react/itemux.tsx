@@ -5,7 +5,7 @@ import { ShapeView } from "./shapeux.js";
 import { Tree } from "fluid-framework";
 import { DragManager } from "../utils/Interfaces/DragManager.js";
 import { DragAndRotatePackage } from "../utils/drag.js";
-import { CommentButton, DeleteButton, VoteButton } from "./buttonux.js";
+import { DeleteButton, VoteButton } from "./buttonux.js";
 import { Toolbar, ToolbarGroup } from "@fluentui/react-components";
 
 const getContentElement = (item: Item): JSX.Element => {

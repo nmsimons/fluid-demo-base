@@ -4,7 +4,7 @@
  */
 
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { Items } from "../schema/app_schema.js";
+import { App } from "../schema/app_schema.js";
 import "../output.css";
 import { ConnectionState, IFluidContainer, TreeView } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
@@ -34,7 +34,7 @@ import { CommentPane } from "./commentux.js";
 import { ChatFilled, ChatRegular, CommentFilled, CommentRegular } from "@fluentui/react-icons";
 
 export function ReactApp(props: {
-	tree: TreeView<typeof Items>;
+	tree: TreeView<typeof App>;
 	selection: SelectionManager<TypedSelection>;
 	users: UsersManager;
 	container: IFluidContainer;
@@ -47,6 +47,7 @@ export function ReactApp(props: {
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 	const [promptPaneHidden, setPromptPaneHidden] = useState(false);
 	const [commentPaneHidden, setCommentPaneHidden] = useState(true);
+	const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined);
 
 	useEffect(() => {
 		const updateConnectionState = () => {
@@ -74,6 +75,17 @@ export function ReactApp(props: {
 		return undoRedo.dispose;
 	}, []);
 
+	useEffect(() => {
+		const unsubscribe = selection.events.on("localUpdated", () => {
+			setSelectedItemId(
+				selection.getLocalSelection().length !== 0
+					? selection.getLocalSelection()[0].id
+					: undefined,
+			);
+		});
+		return unsubscribe;
+	}, []);
+
 	return (
 		<PresenceContext.Provider
 			value={{
@@ -89,7 +101,7 @@ export function ReactApp(props: {
 				<Header saved={saved} connectionState={connectionState} />
 				<Toolbar className="h-[48px] shadow-lg">
 					<ToolbarGroup>
-						<NewShapeButton items={tree.root} canvasSize={canvasSize} />
+						<NewShapeButton items={tree.root.items} canvasSize={canvasSize} />
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
@@ -116,11 +128,16 @@ export function ReactApp(props: {
 				</Toolbar>
 				<div className="flex h-[calc(100vh-96px)] w-full flex-row ">
 					<Canvas
-						items={tree.root}
+						items={tree.root.items}
 						container={container}
 						setSize={(width, height) => setCanvasSize({ width, height })}
 					/>
-					<CommentPane hidden={commentPaneHidden} setHidden={setCommentPaneHidden} />
+					<CommentPane
+						selectedItemId={selectedItemId}
+						hidden={commentPaneHidden}
+						setHidden={setCommentPaneHidden}
+						app={tree.root}
+					/>
 					<PromptPane hidden={promptPaneHidden} setHidden={setPromptPaneHidden} />
 				</div>
 			</div>
