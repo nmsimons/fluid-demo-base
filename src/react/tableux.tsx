@@ -25,14 +25,15 @@ import {
 } from "../schema/app_schema.js";
 import { IMember, Tree, TreeStatus } from "fluid-framework";
 import { useVirtualizer, VirtualItem, Virtualizer } from "@tanstack/react-virtual";
-import { ColumnTypeDropdown, DeleteButton, IconButton } from "./buttonux.js";
+import { DeleteButton, IconButton } from "./buttonux.js";
+import { ColumnTypeDropdown } from "./tablebuttonux.js";
 import {
 	ArrowSortDownFilled,
 	ArrowSortFilled,
 	ArrowSortUpFilled,
 	ReOrderDotsVertical16Filled,
 } from "@fluentui/react-icons";
-import { selectionType, TableSelection } from "../utils/selection.js";
+import { selectionType, TypedSelection } from "../utils/selection.js";
 import { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import {
 	CellInputBoolean,
@@ -219,13 +220,7 @@ export function SortButton(props: { column: Column<FluidRow> }): JSX.Element {
 		}
 	};
 
-	return (
-		<IconButton
-			onClick={handleClick}
-			icon={<SortIndicator sorted={sorted} />}
-			toggled={sorted !== false}
-		/>
-	);
+	return <IconButton onClick={handleClick} icon={<SortIndicator sorted={sorted} />} />;
 }
 
 export function SortIndicator(props: { sorted: false | SortDirection }): JSX.Element {

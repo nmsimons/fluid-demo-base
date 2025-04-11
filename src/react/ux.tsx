@@ -29,10 +29,11 @@ import { PresenceContext } from "./PresenceContext.js";
 import { DragManager } from "../utils/Interfaces/DragManager.js";
 import { DragAndRotatePackage } from "../utils/drag.js";
 import { PromptPane } from "./promptux.js";
+import { TypedSelection } from "../utils/selection.js";
 
 export function ReactApp(props: {
 	tree: TreeView<typeof Items>;
-	selection: SelectionManager;
+	selection: SelectionManager<TypedSelection>;
 	users: UsersManager;
 	container: IFluidContainer;
 	undoRedo: undoRedo;

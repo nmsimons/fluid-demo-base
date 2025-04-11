@@ -23,6 +23,7 @@ export function Canvas(props: {
 
 	useEffect(() => {
 		const unsubscribe = Tree.on(items, "nodeChanged", () => {
+			console.log("items changed");
 			setItemsArray(items.slice());
 		});
 		return unsubscribe;
@@ -62,7 +63,7 @@ export function Canvas(props: {
 			className="relative flex h-full w-full bg-transparent overflow-auto "
 		>
 			{itemsArray.map((item, index) =>
-				item instanceof Item ? <ItemView item={item} key={index} index={index} /> : <></>,
+				item instanceof Item ? <ItemView item={item} key={item.id} index={index} /> : <></>,
 			)}
 		</div>
 	);

@@ -11,7 +11,7 @@ import { IFluidContainer } from "fluid-framework";
 import { FluentProvider, webLightTheme } from "@fluentui/react-components";
 
 import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
-import { createSelectionManager } from "./utils/selection.js";
+import { createTypedSelectionManager } from "./utils/selection.js";
 import { createUsersManager } from "./utils/users.js";
 import { UserInfo } from "./utils/Interfaces/UsersManager.js";
 import { AccountInfo } from "@azure/msal-browser";
@@ -49,7 +49,7 @@ export async function loadApp(props: {
 	// Create a selection manager in the workspace
 	// The selection manager will be used to manage the selection of cells in the table
 	// and will be used to synchronize the selection across clients
-	const selection = createSelectionManager({
+	const selection = createTypedSelectionManager({
 		name: "selection:main", // The name of the workspace
 		workspace, // The presence workspace
 		presence, // The presence data object

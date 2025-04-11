@@ -18,17 +18,17 @@ import { SelectionManager, SelectionPackage, Selection } from "./Interfaces/Sele
 
 // A function that creates a new SelectionManager instance
 // with the given presence and workspace.
-export function createTableSelectionManager(props: {
+export function createTypedSelectionManager(props: {
 	presence: Presence;
 	workspace: Workspace<{}>;
 	name: string;
-}): SelectionManager<TableSelection> {
+}): SelectionManager<TypedSelection> {
 	const { presence, workspace, name } = props;
 
-	class SelectionManagerImpl implements SelectionManager<TableSelection> {
-		initialState: SelectionPackage<TableSelection> = { selected: [] }; // Default initial state for the selection manager
+	class SelectionManagerImpl implements SelectionManager<TypedSelection> {
+		initialState: SelectionPackage<TypedSelection> = { selected: [] }; // Default initial state for the selection manager
 
-		state: LatestState<SelectionPackage<TableSelection>>;
+		state: LatestState<SelectionPackage<TypedSelection>>;
 
 		constructor(
 			name: string,
@@ -39,7 +39,7 @@ export function createTableSelectionManager(props: {
 			this.state = workspace.props[name];
 		}
 
-		public get events(): Listenable<LatestStateEvents<SelectionPackage<TableSelection>>> {
+		public get events(): Listenable<LatestStateEvents<SelectionPackage<TypedSelection>>> {
 			return this.state.events;
 		}
 
@@ -57,12 +57,12 @@ export function createTableSelectionManager(props: {
 		};
 
 		/** Test if the given id is selected by the local client */
-		public testSelection(sel: TableSelection) {
+		public testSelection(sel: TypedSelection) {
 			return this._testForInclusion(sel, this.state.local.selected);
 		}
 
 		/** Test if the given id is selected by any remote client */
-		public testRemoteSelection(sel: TableSelection): string[] {
+		public testRemoteSelection(sel: TypedSelection): string[] {
 			const remoteSelectedClients: string[] = [];
 			for (const cv of this.state.clientValues()) {
 				if (cv.client.getConnectionStatus() === "Connected") {
@@ -80,7 +80,7 @@ export function createTableSelectionManager(props: {
 		}
 
 		/** Change the selection to the given id or array of ids */
-		public setSelection(sel: TableSelection | TableSelection[]) {
+		public setSelection(sel: TypedSelection | TypedSelection[]) {
 			if (Array.isArray(sel)) {
 				// If an array of selections is provided, set it directly
 				this.state.local = { selected: sel };
@@ -96,7 +96,7 @@ export function createTableSelectionManager(props: {
 		}
 
 		/** Toggle the selection of the given id */
-		public toggleSelection(sel: TableSelection) {
+		public toggleSelection(sel: TypedSelection) {
 			if (this.testSelection(sel)) {
 				this.removeFromSelection(sel);
 			} else {
@@ -106,8 +106,8 @@ export function createTableSelectionManager(props: {
 		}
 
 		/** Add the given id to the selection */
-		public addToSelection(sel: TableSelection) {
-			const arr: TableSelection[] = this.state.local.selected.slice();
+		public addToSelection(sel: TypedSelection) {
+			const arr: TypedSelection[] = this.state.local.selected.slice();
 			if (!this._testForInclusion(sel, arr)) {
 				arr.push(sel);
 			}
@@ -115,19 +115,19 @@ export function createTableSelectionManager(props: {
 		}
 
 		/** Remove the given id from the selection */
-		public removeFromSelection(sel: TableSelection) {
-			const arr: TableSelection[] = this.state.local.selected.filter((s) => s.id !== sel.id);
+		public removeFromSelection(sel: TypedSelection) {
+			const arr: TypedSelection[] = this.state.local.selected.filter((s) => s.id !== sel.id);
 			this.state.local = { selected: arr };
 		}
 
 		/** Get the current local selection array */
-		public getLocalSelection(): readonly TableSelection[] {
+		public getLocalSelection(): readonly TypedSelection[] {
 			return this.state.local.selected;
 		}
 
 		/** Get the current remote selection map where the key is the selected item id and the value is an array of client ids */
-		public getRemoteSelected(): Map<TableSelection, string[]> {
-			const remoteSelected = new Map<TableSelection, string[]>();
+		public getRemoteSelected(): Map<TypedSelection, string[]> {
+			const remoteSelected = new Map<TypedSelection, string[]>();
 			for (const cv of this.state.clientValues()) {
 				if (cv.client.getConnectionStatus() === "Connected") {
 					for (const sel of cv.value.selected) {
@@ -143,8 +143,8 @@ export function createTableSelectionManager(props: {
 		}
 
 		private _testForInclusion(
-			sel: TableSelection,
-			collection: readonly TableSelection[],
+			sel: TypedSelection,
+			collection: readonly TypedSelection[],
 		): boolean {
 			/**
 			 * Helper function to test for inclusion of a selection in a collection.
@@ -299,9 +299,9 @@ export function createSelectionManager(props: {
 	return new SelectionManagerImpl(name, workspace, presence);
 }
 
-export type TableSelection = {
+export type TypedSelection = {
 	id: string; // The unique identifier for the selected item
-	type: selectionType; // The type of the selection (row, column, cell, etc.)
+	type?: selectionType; // The type of the selection (row, column, cell, etc.)
 };
 
 export type selectionType = "row" | "column" | "cell";

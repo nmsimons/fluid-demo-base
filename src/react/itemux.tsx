@@ -5,6 +5,8 @@ import { ShapeView } from "./shapeux.js";
 import { Tree } from "fluid-framework";
 import { DragManager } from "../utils/Interfaces/DragManager.js";
 import { DragAndRotatePackage } from "../utils/drag.js";
+import { CommentButton, DeleteButton, VoteButton } from "./buttonux.js";
+import { Toolbar, ToolbarGroup } from "@fluentui/react-components";
 
 const getContentElement = (item: Item): JSX.Element => {
 	if (Tree.is(item.content, Shape)) {
@@ -140,6 +142,12 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 		}
 	};
 
+	if (selected) {
+		itemProps.zIndex = 1000;
+	} else {
+		itemProps.zIndex = index;
+	}
+
 	return (
 		<div
 			onClick={(e) => handleClick(e)}
@@ -147,7 +155,7 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 			onDrag={(e) => handleDrag(e)}
 			onDragEnd={(e) => handleDragEnd(e)}
 			draggable="true"
-			className="absolute"
+			className={`absolute`}
 			style={{ ...itemProps }}
 		>
 			<SelectionBox selected={selected} item={item} />
@@ -208,7 +216,7 @@ export function PresenceBox(props: { remoteSelected: boolean }): JSX.Element {
 	const padding = 8;
 	return (
 		<div
-			className={`absolute border-4 border-dashed border-black opacity-40 bg-transparent ${remoteSelected ? "" : " hidden"}`}
+			className={`absolute border-3 border-dashed border-black opacity-40 bg-transparent ${remoteSelected ? "" : " hidden"}`}
 			style={{
 				left: -padding,
 				top: -padding,
@@ -226,7 +234,7 @@ export function SelectionBox(props: { selected: boolean; item: Item }): JSX.Elem
 
 	return (
 		<div
-			className={`absolute border-4 border-dashed border-black bg-transparent ${selected ? "" : " hidden"}`}
+			className={`absolute border-3 border-dashed border-black bg-transparent ${selected ? "" : " hidden"}`}
 			style={{
 				left: -padding,
 				top: -padding,
@@ -243,11 +251,11 @@ export function SelectionBox(props: { selected: boolean; item: Item }): JSX.Elem
 export function SelectionControls(props: { item: Item; padding: number }): JSX.Element {
 	const { item, padding } = props;
 
-	const height = 32;
+	const height = 40;
 
 	return (
 		<div
-			className={`absolute flex flex-row justify-items-center items-center w-full bg-black border-4 border-black`}
+			className={`absolute flex flex-row justify-items-center items-center w-full bg-gray-100 border-2 border-black shadow-md`}
 			style={{
 				left: -padding / 2,
 				top: -(height + 2) - padding,
@@ -255,12 +263,37 @@ export function SelectionControls(props: { item: Item; padding: number }): JSX.E
 				height: height,
 			}}
 		>
-			<DragHandle item={item} />{" "}
+			<RotateHandle item={item} />
+			<ItemToolbar item={item} />
 		</div>
 	);
 }
 
-export function DragHandle(props: { item: Item }): JSX.Element {
+export function ItemToolbar(props: { item: Item }): JSX.Element {
+	const { item } = props;
+	return (
+		<Toolbar
+			size="small"
+			className={"flex flex-row items-center justify-between w-full h-full"}
+		>
+			<ToolbarGroup role="presentation">
+				<VoteButton vote={item.votes} />
+				<CommentButton item={item} />
+			</ToolbarGroup>
+			<ToolbarGroup role="presentation">
+				<DeleteButton
+					delete={() => {
+						Tree.runTransaction(item, () => {
+							item.delete();
+						});
+					}}
+				/>
+			</ToolbarGroup>
+		</Toolbar>
+	);
+}
+
+export function RotateHandle(props: { item: Item }): JSX.Element {
 	const { item } = props;
 
 	const [rotating, setRotating] = useState(false);

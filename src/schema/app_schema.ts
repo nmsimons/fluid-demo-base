@@ -176,13 +176,32 @@ export class FluidTable extends Table({
 	}
 }
 
+export class Comment extends sf.object("Comment", {
+	id: sf.identifier,
+	text: sf.string,
+	userId: sf.string,
+	votes: Vote,
+	createdAt: DateTime,
+}) {}
+
 export class Item extends sf.object("Item", {
 	id: sf.identifier,
 	x: sf.number,
 	y: sf.number,
 	rotation: sf.number,
+	comments: sf.array(Comment),
+	votes: Vote,
 	content: [Shape, Note],
-}) {}
+}) {
+	delete(): void {
+		const parent = Tree.parent(this);
+		if (Tree.is(parent, Items)) {
+			parent.removeAt(parent.indexOf(this));
+		} else if (Tree.is(parent, Group)) {
+			parent.content.removeAt(parent.content.indexOf(this));
+		}
+	}
+}
 
 export class Group extends sf.object("Group", {
 	id: sf.identifier,
