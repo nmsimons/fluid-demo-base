@@ -92,8 +92,8 @@ export function NewNoteButton(props: {
 		});
 
 		const item = new Item({
-			x: getRandomNumber(0, canvasSize.width),
-			y: getRandomNumber(0, canvasSize.height),
+			x: getRandomNumber(0, canvasSize.width - 200),
+			y: getRandomNumber(0, canvasSize.height - 200),
 			comments: [],
 			votes: new Vote({ votes: [] }),
 			content: note,
@@ -155,14 +155,14 @@ export function VoteButton(props: { vote: Vote }): JSX.Element {
 export function CommentButton(props: { item: Item }): JSX.Element {
 	const { item } = props;
 	const presence = useContext(PresenceContext);
-	const userId = presence.users.getMyself().value.id;
 	const handleClick = (e: React.MouseEvent<Element, MouseEvent>) => {
 		e.stopPropagation();
 		const text = prompt("Enter your comment: ");
 		if (text) {
 			const comment = new Comment({
 				text,
-				userId,
+				userId: presence.users.getMyself().value.id,
+				username: presence.users.getMyself().value.name,
 				votes: new Vote({ votes: [] }),
 				createdAt: new DateTime({ raw: Date.now() }),
 			});
