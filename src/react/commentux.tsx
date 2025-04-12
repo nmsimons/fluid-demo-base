@@ -58,10 +58,8 @@ export function CommentPane(props: {
 
 	return (
 		<Pane hidden={hidden} setHidden={setHidden} title={title}>
-			<div className="flex flex-col h-full space-y-2">
-				<CommentList comments={commentArray} />
-				<CommentInput callback={(comment) => handleAddComment(comment)} />
-			</div>
+			<CommentList comments={commentArray} />
+			<CommentInput callback={(comment) => handleAddComment(comment)} />
 		</Pane>
 	);
 }
@@ -69,7 +67,7 @@ export function CommentPane(props: {
 export function CommentList(props: { comments: Comment[] }): JSX.Element {
 	const { comments } = props;
 	return (
-		<div className="flex flex-col h-full space-y-2">
+		<div className="flex flex-col grow space-y-2 overflow-y-auto">
 			{comments.map((comment) => (
 				<CommentText key={comment.id} comment={comment} />
 			))}
@@ -86,15 +84,16 @@ export function CommentInput(props: { callback: (comment: string) => void }): JS
 	const { callback } = props;
 	const [comment, setComment] = useState("");
 	return (
-		<div className="flex flex-col space-y-2 ">
+		<div className="flex flex-col justify-self-end gap-y-2 ">
 			<Textarea
-				style={{ marginBottom: "8px" }}
+				className="flex"
 				rows={4}
 				value={comment}
 				onChange={(e) => setComment(e.target.value)}
 				placeholder="Type your comment here..."
 			/>
 			<Button
+				className="flex "
 				appearance="primary"
 				onClick={() => {
 					callback(comment);

@@ -35,7 +35,8 @@ export function PromptPane(props: {
 
 	return (
 		<Pane hidden={hidden} setHidden={setHidden} title="Prompt">
-			<PromptOutput response={response} applyResponse={handleApplyResponse} />
+			<PromptOutput response={response} />
+			<ApplyResponseButton response={response} callback={handleApplyResponse} />
 			<PromptInput callback={handlePromptSubmit} />
 		</Pane>
 	);
@@ -45,9 +46,9 @@ export function PromptInput(props: { callback: (prompt: string) => void }): JSX.
 	const { callback } = props;
 	const [prompt, setPrompt] = useState("");
 	return (
-		<div className="flex flex-col space-y-2">
+		<div className="flex flex-col justify-self-end gap-y-2 ">
 			<Textarea
-				style={{ marginBottom: "8px" }}
+				className="flex "
 				rows={8}
 				value={prompt}
 				onChange={(e) => setPrompt(e.target.value)}
@@ -65,22 +66,15 @@ export function PromptInput(props: { callback: (prompt: string) => void }): JSX.
 	);
 }
 
-export function PromptOutput(props: {
-	response: string;
-	applyResponse: (response: string) => void;
-}): JSX.Element {
-	const { response, applyResponse } = props;
-
+export function PromptOutput(props: { response: string }): JSX.Element {
+	const { response } = props;
 	return (
-		<>
-			<Textarea
-				style={{ marginBottom: "8px", height: "100%", resize: "none" }}
-				readOnly
-				placeholder="Your response will appear here..."
-				value={response}
-			/>
-			<ApplyResponseButton response={response} callback={(res) => applyResponse(res)} />
-		</>
+		<Textarea
+			className="flex grow"
+			readOnly
+			placeholder="Your response will appear here..."
+			value={response}
+		/>
 	);
 }
 
@@ -92,8 +86,7 @@ export function ApplyResponseButton(props: {
 
 	return (
 		<Button
-			style={{ marginBottom: "8px" }}
-			appearance="subtle"
+			className="flex shrink-0"
 			onClick={() => {
 				callback(response);
 			}}

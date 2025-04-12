@@ -16,7 +16,7 @@ export function Pane(props: {
 	}
 
 	return (
-		<div className="flex flex-col bg-gray-100 p-4 h-full max-w-80 min-w-80 border-l border-gray-300">
+		<div className="flex flex-col bg-gray-100 p-4 gap-y-2 h-full max-w-80 min-w-80 border-l border-gray-300">
 			<PaneTitleBar title={title} onClose={() => setHidden(true)} />
 			{children}
 		</div>
@@ -26,7 +26,7 @@ export function Pane(props: {
 export function PaneTitleBar(props: { title: string; onClose: () => void }): JSX.Element {
 	const { title, onClose } = props;
 	return (
-		<div className="flex items-center justify-between mb-2">
+		<div className="flex flex-row items-center justify-between mb-2">
 			<Text weight="semibold" size={400}>
 				{title}
 			</Text>
