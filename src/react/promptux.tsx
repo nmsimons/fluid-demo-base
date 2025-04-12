@@ -1,7 +1,7 @@
 // A pane for displaying and interacting with an LLM on the right side of the screen
 import { Button, Textarea } from "@fluentui/react-components";
 import { ArrowLeftFilled } from "@fluentui/react-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pane } from "./paneux.js";
 import { asTreeViewAlpha, TreeView, TreeBranch } from "@fluidframework/tree/alpha";
 import { createFunctioningAgent } from "@fluidframework/tree-agent/alpha";
@@ -16,15 +16,22 @@ export function PromptPane(props: {
 }): JSX.Element {
 	const { hidden, setHidden, view, setView } = props;
 	const [response, setResponse] = useState("");
+	const [log, setLog] = useState("");
 	const [branch, setBranch] = useState<TreeBranch | undefined>();
+
+	const updateLog = (msg: string) => {
+		setLog((prev) => prev + msg + "\n");
+	};
 
 	const handlePromptSubmit = async (prompt: string) => {
 		const client = new ChatOpenAI({ model: "o3-mini" });
-		const branch = asTreeViewAlpha(props.view).fork();
-		setBranch(branch);
-		const agent = createFunctioningAgent(client, branch, { log: (msg) => console.log(msg) });
-		const response = await agent.query(prompt);
-		setResponse(response ?? "LLM query failed.");
+		const forked = asTreeViewAlpha(view).fork();
+		setBranch(forked);
+		const agent = createFunctioningAgent(client, forked, {
+			log: (msg) => updateLog(msg),
+		});
+		const r = await agent.query(prompt);
+		setResponse(r ?? "LLM query failed.");
 	};
 
 	const handleApplyResponse = () => {
@@ -32,11 +39,13 @@ export function PromptPane(props: {
 			asTreeViewAlpha(view).merge(branch);
 			setBranch(undefined);
 			setResponse("");
+			setLog("");
 		}
 	};
 
 	return (
 		<Pane hidden={hidden} setHidden={setHidden} title="Prompt">
+			<PromptLog log={log} />
 			<PromptOutput response={response} />
 			<ResponseButtons
 				response={response}
@@ -54,7 +63,7 @@ export function PromptInput(props: { callback: (prompt: string) => void }): JSX.
 	return (
 		<div className="flex flex-col justify-self-end gap-y-2 ">
 			<Textarea
-				className="flex "
+				className="flex"
 				rows={8}
 				value={prompt}
 				onChange={(e) => setPrompt(e.target.value)}
@@ -72,14 +81,42 @@ export function PromptInput(props: { callback: (prompt: string) => void }): JSX.
 	);
 }
 
+export function PromptLog(props: { log: string }): JSX.Element {
+	const { log } = props;
+	return (
+		<textarea
+			className="flex grow"
+			readOnly
+			placeholder="Your prompt log will appear here..."
+			value={log}
+			style={{
+				resize: "none",
+				backgroundColor: "white",
+				border: "1px solid #ccc",
+				padding: "8px",
+				borderRadius: "4px",
+				outline: "none",
+			}}
+		/>
+	);
+}
+
 export function PromptOutput(props: { response: string }): JSX.Element {
 	const { response } = props;
 	return (
-		<Textarea
-			className="flex grow"
+		<textarea
+			rows={8}
 			readOnly
 			placeholder="Your response will appear here..."
 			value={response}
+			style={{
+				resize: "none",
+				backgroundColor: "white",
+				border: "1px solid #ccc",
+				padding: "8px",
+				borderRadius: "4px",
+				outline: "none",
+			}}
 		/>
 	);
 }
