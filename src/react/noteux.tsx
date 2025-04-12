@@ -12,7 +12,6 @@ export function NoteView(props: { note: Note }): JSX.Element {
 			style={{
 				width: "200px",
 				height: "200px",
-				backgroundColor: "lightyellow",
 			}}
 		>
 			<NoteText {...props} />
@@ -34,7 +33,9 @@ export function NoteText(props: { note: Note }): JSX.Element {
 			value={note.text}
 			onChange={handleChange}
 			placeholder="Type your note here..."
-			style={{ resize: "none", backgroundColor: "lightyellow" }}
+			appearance="filled-lighter"
+			size="large"
+			style={{ resize: "none", backgroundColor: "gold" }}
 		/>
 	);
 }

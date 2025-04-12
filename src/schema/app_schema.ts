@@ -105,6 +105,7 @@ export class Comment extends sf.object("Comment", {
 	id: sf.identifier,
 	text: sf.string,
 	userId: sf.string,
+	username: sf.string,
 	votes: Vote,
 	createdAt: DateTime,
 }) {
@@ -117,10 +118,11 @@ export class Comment extends sf.object("Comment", {
 }
 
 export class Comments extends sf.array("Comments", [Comment]) {
-	addComment(text: string, userId: string): void {
+	addComment(text: string, userId: string, username: string): void {
 		const comment = new Comment({
 			text,
 			userId,
+			username,
 			votes: new Vote({ votes: [] }),
 			createdAt: new DateTime({ raw: Date.now() }),
 		});
