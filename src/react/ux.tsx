@@ -6,7 +6,7 @@
 import React, { JSX, useContext, useEffect, useState } from "react";
 import { App } from "../schema/app_schema.js";
 import "../output.css";
-import { ConnectionState, IFluidContainer, TreeView } from "fluid-framework";
+import { ConnectionState, IFluidContainer } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
@@ -38,6 +38,7 @@ import { PromptPane } from "./promptux.js";
 import { TypedSelection } from "../utils/selection.js";
 import { CommentPane } from "./commentux.js";
 import { ChatFilled, ChatRegular, CommentFilled, CommentRegular } from "@fluentui/react-icons";
+import { asTreeViewAlpha, TreeView } from "@fluidframework/tree/alpha";
 
 export function ReactApp(props: {
 	tree: TreeView<typeof App>;
@@ -54,6 +55,7 @@ export function ReactApp(props: {
 	const [promptPaneHidden, setPromptPaneHidden] = useState(false);
 	const [commentPaneHidden, setCommentPaneHidden] = useState(true);
 	const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined);
+	const [view, setView] = useState<TreeView<typeof App>>(asTreeViewAlpha(tree));
 
 	useEffect(() => {
 		const updateConnectionState = () => {
@@ -107,8 +109,8 @@ export function ReactApp(props: {
 				<Header saved={saved} connectionState={connectionState} />
 				<Toolbar className="h-[48px] shadow-lg">
 					<ToolbarGroup>
-						<NewShapeButton items={tree.root.items} canvasSize={canvasSize} />
-						<NewNoteButton items={tree.root.items} canvasSize={canvasSize} />
+						<NewShapeButton items={view.root.items} canvasSize={canvasSize} />
+						<NewNoteButton items={view.root.items} canvasSize={canvasSize} />
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
@@ -135,7 +137,7 @@ export function ReactApp(props: {
 				</Toolbar>
 				<div className="flex h-[calc(100vh-96px)] w-full flex-row ">
 					<Canvas
-						items={tree.root.items}
+						items={view.root.items}
 						container={container}
 						setSize={(width, height) => setCanvasSize({ width, height })}
 					/>
@@ -143,12 +145,13 @@ export function ReactApp(props: {
 						selectedItemId={selectedItemId}
 						hidden={commentPaneHidden}
 						setHidden={setCommentPaneHidden}
-						app={tree.root}
+						app={view.root}
 					/>
 					<PromptPane
 						hidden={promptPaneHidden}
 						setHidden={setPromptPaneHidden}
-						view={tree}
+						view={view}
+						setView={setView}
 					/>
 				</div>
 			</div>

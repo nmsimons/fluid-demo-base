@@ -12,8 +12,9 @@ export function PromptPane(props: {
 	hidden: boolean;
 	setHidden: (hidden: boolean) => void;
 	view: TreeView<typeof App>;
+	setView: (view: TreeView<typeof App>) => void;
 }): JSX.Element {
-	const { hidden, setHidden } = props;
+	const { hidden, setHidden, view, setView } = props;
 	const [response, setResponse] = useState("");
 	const [branch, setBranch] = useState<TreeBranch | undefined>();
 
@@ -28,15 +29,20 @@ export function PromptPane(props: {
 
 	const handleApplyResponse = () => {
 		if (branch !== undefined) {
-			asTreeViewAlpha(props.view).merge(branch);
+			asTreeViewAlpha(view).merge(branch);
 			setBranch(undefined);
+			setResponse("");
 		}
 	};
 
 	return (
 		<Pane hidden={hidden} setHidden={setHidden} title="Prompt">
 			<PromptOutput response={response} />
-			<ApplyResponseButton response={response} callback={handleApplyResponse} />
+			<ResponseButtons
+				response={response}
+				callback={handleApplyResponse}
+				cancelCallback={() => setBranch(undefined)}
+			/>
 			<PromptInput callback={handlePromptSubmit} />
 		</Pane>
 	);
@@ -78,6 +84,21 @@ export function PromptOutput(props: { response: string }): JSX.Element {
 	);
 }
 
+export function ResponseButtons(props: {
+	response: string;
+	callback: (response: string) => void;
+	cancelCallback: () => void;
+}): JSX.Element {
+	const { response, callback, cancelCallback } = props;
+
+	return (
+		<div className="flex flex-row gap-x-2">
+			<ApplyResponseButton response={response} callback={callback} />
+			<CancelResponseButton response={response} callback={cancelCallback} />
+		</div>
+	);
+}
+
 export function ApplyResponseButton(props: {
 	response: string;
 	callback: (response: string) => void;
@@ -86,13 +107,34 @@ export function ApplyResponseButton(props: {
 
 	return (
 		<Button
-			className="flex shrink-0"
+			appearance="primary"
+			className="flex shrink-0 grow"
 			onClick={() => {
 				callback(response);
 			}}
 			icon={<ArrowLeftFilled />}
+			disabled={response.trim() === ""}
 		>
 			Accept Response
+		</Button>
+	);
+}
+
+export function CancelResponseButton(props: {
+	response: string;
+	callback: () => void;
+}): JSX.Element {
+	const { callback, response } = props;
+
+	return (
+		<Button
+			className="flex shrink-0"
+			onClick={() => {
+				callback();
+			}}
+			disabled={response.trim() === ""}
+		>
+			Cancel
 		</Button>
 	);
 }
