@@ -35,7 +35,7 @@ export function NoteText(props: { note: Note }): JSX.Element {
 			placeholder="Type your note here..."
 			appearance="filled-lighter"
 			size="large"
-			style={{ resize: "none", backgroundColor: "gold" }}
+			style={{ resize: "none", backgroundColor: "#feff68" }}
 		/>
 	);
 }
