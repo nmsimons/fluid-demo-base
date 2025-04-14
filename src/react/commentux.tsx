@@ -4,27 +4,23 @@ import React, { useContext, useEffect, useState } from "react";
 import { Pane } from "./paneux.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { App, Comment, Comments, Group, Item, Shape } from "../schema/app_schema.js";
-import { Tree } from "fluid-framework";
+import { useTree } from "./useTree.js";
 
 export function CommentPane(props: {
 	hidden: boolean;
 	setHidden: (hidden: boolean) => void;
-	selectedItemId: string | undefined;
-	app: App;
+	item: Item | Group | App;
 }): JSX.Element {
-	const { hidden, setHidden, selectedItemId, app } = props;
+	const { hidden, setHidden, item } = props;
 	const presence = useContext(PresenceContext);
-	const [commentArray, setCommentArray] = useState<Comment[]>([]);
-	const [comments, setComments] = useState<Comments>();
 	const [title, setTitle] = useState("Comments");
+	useTree(item.comments);
 
 	useEffect(() => {
-		const target = getCommentTarget(selectedItemId, app);
-		setComments(target.comments);
-		if (target instanceof Group) {
+		if (item instanceof Group) {
 			setTitle("Group Comments");
-		} else if (target instanceof Item) {
-			const content = target.content;
+		} else if (item instanceof Item) {
+			const content = item.content;
 			if (content instanceof Shape) {
 				setTitle(`Comments on ${content.type}`);
 			} else {
@@ -33,38 +29,26 @@ export function CommentPane(props: {
 		} else {
 			setTitle("General comments");
 		}
-	}, [selectedItemId]);
-
-	useEffect(() => {
-		if (comments) {
-			setCommentArray(comments.slice());
-			const unsubscribe = Tree.on(comments, "nodeChanged", () => {
-				setCommentArray(comments.slice());
-			});
-			return unsubscribe;
-		}
-	}, [comments]);
+	}, [item]);
 
 	const handleAddComment = (comment: string) => {
 		if (comment.trim() === "") return;
-		if (comments) {
-			comments.addComment(
-				comment,
-				presence.users.getMyself().value.id,
-				presence.users.getMyself().value.name,
-			);
-		}
+		item.comments.addComment(
+			comment,
+			presence.users.getMyself().value.id,
+			presence.users.getMyself().value.name,
+		);
 	};
 
 	return (
 		<Pane hidden={hidden} setHidden={setHidden} title={title}>
-			<CommentList comments={commentArray} />
+			<CommentList comments={item.comments} />
 			<CommentInput callback={(comment) => handleAddComment(comment)} />
 		</Pane>
 	);
 }
 
-export function CommentList(props: { comments: Comment[] }): JSX.Element {
+export function CommentList(props: { comments: Comments }): JSX.Element {
 	const { comments } = props;
 	return (
 		<div className="flex flex-col grow space-y-2 overflow-y-auto">
@@ -105,9 +89,3 @@ export function CommentInput(props: { callback: (comment: string) => void }): JS
 		</div>
 	);
 }
-
-const getCommentTarget = (id: string | undefined, app: App): Item | Group | App => {
-	if (id === undefined) return app;
-	const item = app.items.find((i) => i.id === id);
-	return item ? item : app;
-};

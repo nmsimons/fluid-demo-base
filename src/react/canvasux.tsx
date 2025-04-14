@@ -9,6 +9,7 @@ import { Items, Item, Group } from "../schema/app_schema.js";
 import { IFluidContainer, Tree } from "fluid-framework";
 import { PresenceContext } from "./PresenceContext.js";
 import { ItemView } from "./itemux.js";
+import { useTree } from "./useTree.js";
 
 export function Canvas(props: {
 	items: Items;
@@ -16,17 +17,10 @@ export function Canvas(props: {
 	setSize: (width: number, height: number) => void;
 }): JSX.Element {
 	const { items, setSize } = props;
-	const [itemsArray, setItemsArray] = React.useState<(Item | Group)[]>(items.slice());
 	const presence = useContext(PresenceContext);
+	useTree(items);
 
 	const canvasRef = React.useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		const unsubscribe = Tree.on(items, "nodeChanged", () => {
-			setItemsArray(items.slice());
-		});
-		return unsubscribe;
-	}, []);
 
 	const handleResize = () => {
 		if (canvasRef.current) {
@@ -61,7 +55,7 @@ export function Canvas(props: {
 			}}
 			className="relative flex h-full w-full bg-transparent overflow-auto "
 		>
-			{itemsArray.map((item, index) =>
+			{items.map((item, index) =>
 				item instanceof Item ? <ItemView item={item} key={item.id} index={index} /> : <></>,
 			)}
 		</div>

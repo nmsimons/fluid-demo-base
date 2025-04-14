@@ -1,7 +1,7 @@
 // A pane for displaying and interacting with an LLM on the right side of the screen
 import { Button, Textarea } from "@fluentui/react-components";
 import { ArrowLeftFilled } from "@fluentui/react-icons";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Pane } from "./paneux.js";
 import { asTreeViewAlpha, TreeView, TreeBranch } from "@fluidframework/tree/alpha";
 import { createFunctioningAgent } from "@fluidframework/tree-agent/alpha";
@@ -11,10 +11,10 @@ import { ChatOpenAI } from "@langchain/openai";
 export function PromptPane(props: {
 	hidden: boolean;
 	setHidden: (hidden: boolean) => void;
-	view: TreeView<typeof App>;
+	tree: TreeView<typeof App>;
 	setView: (view: TreeView<typeof App>) => void;
 }): JSX.Element {
-	const { hidden, setHidden, view, setView } = props;
+	const { hidden, setHidden, tree, setView } = props;
 	const [response, setResponse] = useState("");
 	const [log, setLog] = useState("");
 	const [branch, setBranch] = useState<TreeBranch | undefined>();
@@ -25,22 +25,24 @@ export function PromptPane(props: {
 
 	const handlePromptSubmit = async (prompt: string) => {
 		const client = new ChatOpenAI({ model: "o3-mini" });
-		const forked = asTreeViewAlpha(view).fork();
+		const forked = asTreeViewAlpha(tree).fork();
 		setBranch(forked);
 		const agent = createFunctioningAgent(client, forked, {
 			log: (msg) => updateLog(msg),
 		});
 		const r = await agent.query(prompt);
 		setResponse(r ?? "LLM query failed.");
+		setView(forked);
 	};
 
 	const handleApplyResponse = () => {
 		if (branch !== undefined) {
-			asTreeViewAlpha(view).merge(branch);
+			asTreeViewAlpha(tree).merge(branch);
 			setBranch(undefined);
 			setResponse("");
 			setLog("");
 		}
+		setView(tree);
 	};
 
 	return (

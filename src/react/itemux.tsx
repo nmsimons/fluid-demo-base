@@ -8,6 +8,7 @@ import { DragAndRotatePackage } from "../utils/drag.js";
 import { DeleteButton, VoteButton } from "./buttonux.js";
 import { Toolbar, ToolbarGroup } from "@fluentui/react-components";
 import { NoteView } from "./noteux.js";
+import { useTree } from "./useTree.js";
 
 const getContentElement = (item: Item): JSX.Element => {
 	if (Tree.is(item.content, Shape)) {
@@ -21,6 +22,7 @@ const getContentElement = (item: Item): JSX.Element => {
 
 export function ItemView(props: { item: Item; index: number }): JSX.Element {
 	const { item, index } = props;
+	const itemInval = useTree(item);
 	const [offset, setOffset] = useState({ x: 0, y: 0 });
 
 	const presence = useContext(PresenceContext); // Placeholder for context if needed
@@ -43,16 +45,13 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 	});
 
 	useEffect(() => {
-		const unsubscribe = Tree.on(item, "nodeChanged", () => {
-			setItemProps({
-				left: item.x,
-				top: item.y,
-				zIndex: index,
-				transform: `rotate(${item.rotation}deg)`,
-			});
+		setItemProps({
+			left: item.x,
+			top: item.y,
+			zIndex: index,
+			transform: `rotate(${item.rotation}deg)`,
 		});
-		return unsubscribe;
-	}, []);
+	}, [itemInval]);
 
 	useEffect(() => {
 		return dragListener("updated", presence.drag);

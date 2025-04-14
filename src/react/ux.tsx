@@ -4,7 +4,7 @@
  */
 
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { App } from "../schema/app_schema.js";
+import { App, Group, Item } from "../schema/app_schema.js";
 import "../output.css";
 import { ConnectionState, IFluidContainer } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
@@ -54,7 +54,7 @@ export function ReactApp(props: {
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 	const [promptPaneHidden, setPromptPaneHidden] = useState(false);
 	const [commentPaneHidden, setCommentPaneHidden] = useState(true);
-	const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined);
+	const [selectedItem, setSelectedItem] = useState<Item | App | Group>(tree.root);
 	const [view, setView] = useState<TreeView<typeof App>>(asTreeViewAlpha(tree));
 
 	useEffect(() => {
@@ -85,11 +85,14 @@ export function ReactApp(props: {
 
 	useEffect(() => {
 		const unsubscribe = selection.events.on("localUpdated", () => {
-			setSelectedItemId(
+			const itemId =
 				selection.getLocalSelection().length !== 0
 					? selection.getLocalSelection()[0].id
-					: undefined,
-			);
+					: undefined;
+
+			const selectedItem = view.root.items.find((item) => item.id === itemId);
+
+			setSelectedItem(selectedItem ?? view.root);
 		});
 		return unsubscribe;
 	}, []);
@@ -142,15 +145,14 @@ export function ReactApp(props: {
 						setSize={(width, height) => setCanvasSize({ width, height })}
 					/>
 					<CommentPane
-						selectedItemId={selectedItemId}
 						hidden={commentPaneHidden}
 						setHidden={setCommentPaneHidden}
-						app={view.root}
+						item={selectedItem}
 					/>
 					<PromptPane
 						hidden={promptPaneHidden}
 						setHidden={setPromptPaneHidden}
-						view={view}
+						tree={tree}
 						setView={setView}
 					/>
 				</div>

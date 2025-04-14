@@ -1,33 +1,22 @@
-import React, { JSX, useState, useEffect } from "react";
+import React, { JSX } from "react";
 import { Shape } from "../schema/app_schema.js";
-import { Tree } from "fluid-framework";
+import { useTree } from "./useTree.js";
 
 const shadow = "drop-shadow(3px 3px 3px rgb(0 0 0 / 0.3))";
 
 export function ShapeView(props: { shape: Shape }): JSX.Element {
 	const { shape } = props;
-
-	const [shapeProps, setShapeProps] = useState({
-		size: shape.size,
-		backgroundColor: shape.color,
-	});
-
-	useEffect(() => {
-		const unsubscribe = Tree.on(props.shape, "nodeChanged", () => {
-			setShapeProps({ size: shape.size, backgroundColor: shape.color });
-		});
-		return unsubscribe;
-	}, []);
+	useTree(shape);
 
 	switch (shape.type) {
 		case "circle":
-			return <Circle {...shapeProps} />;
+			return <Circle size={shape.size} backgroundColor={shape.color} />;
 		case "square":
-			return <Square {...shapeProps} />;
+			return <Square size={shape.size} backgroundColor={shape.color} />;
 		case "triangle":
-			return <Triangle {...shapeProps} />;
+			return <Triangle size={shape.size} backgroundColor={shape.color} />;
 		case "star":
-			return <Star {...shapeProps} />;
+			return <Star size={shape.size} backgroundColor={shape.color} />;
 		default:
 			return <></>;
 	}
