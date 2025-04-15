@@ -16,6 +16,7 @@ import {
 	NewShapeButton,
 	ShowPaneButton,
 	NewNoteButton,
+	TooltipButton,
 } from "./buttonux.js";
 import {
 	Avatar,
@@ -37,11 +38,18 @@ import { DragAndRotatePackage } from "../utils/drag.js";
 import { PromptPane } from "./promptux.js";
 import { TypedSelection } from "../utils/selection.js";
 import { CommentPane } from "./commentux.js";
-import { ChatFilled, ChatRegular, CommentFilled, CommentRegular } from "@fluentui/react-icons";
-import { asTreeViewAlpha, TreeView } from "@fluidframework/tree/alpha";
+import {
+	BranchFilled,
+	ChatFilled,
+	ChatRegular,
+	CommentFilled,
+	CommentRegular,
+	MergeFilled,
+} from "@fluentui/react-icons";
+import { TreeViewAlpha } from "@fluidframework/tree/alpha";
 
 export function ReactApp(props: {
-	tree: TreeView<typeof App>;
+	tree: TreeViewAlpha<typeof App>;
 	selection: SelectionManager<TypedSelection>;
 	users: UsersManager;
 	container: IFluidContainer;
@@ -55,7 +63,7 @@ export function ReactApp(props: {
 	const [promptPaneHidden, setPromptPaneHidden] = useState(false);
 	const [commentPaneHidden, setCommentPaneHidden] = useState(true);
 	const [selectedItem, setSelectedItem] = useState<Item | App | Group>(tree.root);
-	const [view, setView] = useState<TreeView<typeof App>>(asTreeViewAlpha(tree));
+	const [view, setView] = useState<TreeViewAlpha<typeof App>>(tree);
 
 	useEffect(() => {
 		const updateConnectionState = () => {
@@ -82,6 +90,10 @@ export function ReactApp(props: {
 	useEffect(() => {
 		return undoRedo.dispose;
 	}, []);
+
+	useEffect(() => {
+		console.log("view changed", view);
+	}, [view]);
 
 	useEffect(() => {
 		const unsubscribe = selection.events.on("localUpdated", () => {
@@ -130,6 +142,27 @@ export function ReactApp(props: {
 							hidePane={setPromptPaneHidden}
 							paneHidden={promptPaneHidden}
 							tooltip="AI Chat"
+						/>
+					</ToolbarGroup>
+					<ToolbarDivider />
+					<ToolbarGroup>
+						<TooltipButton
+							onClick={() => {
+								// create a new branch and set it as the current branch
+								const newBranch = tree.fork();
+								setView(newBranch);
+							}}
+							tooltip="Branch"
+							icon={<BranchFilled />}
+						/>
+						<TooltipButton
+							onClick={() => {
+								// merge the current branch into the main branch
+								tree.merge(view);
+								setView(tree);
+							}}
+							tooltip="Merge"
+							icon={<MergeFilled />}
 						/>
 					</ToolbarGroup>
 					<ToolbarDivider />

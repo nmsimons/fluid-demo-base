@@ -16,6 +16,7 @@ import { createUsersManager } from "./utils/users.js";
 import { UserInfo } from "./utils/Interfaces/UsersManager.js";
 import { AccountInfo } from "@azure/msal-browser";
 import { createDragManager } from "./utils/drag.js";
+import { asTreeViewAlpha } from "@fluidframework/tree/alpha";
 
 export async function loadApp(props: {
 	client: AzureClient;
@@ -29,7 +30,9 @@ export async function loadApp(props: {
 	const { container } = await loadFluidData(containerId, containerSchema, client, logger);
 
 	// Initialize the SharedTree DDSes
-	const appTree = container.initialObjects.appData.viewWith(appTreeConfiguration);
+	const appTree = asTreeViewAlpha(
+		container.initialObjects.appData.viewWith(appTreeConfiguration),
+	);
 	if (appTree.compatibility.canInitialize) {
 		appTree.initialize(new App({ items: [], comments: [] }));
 	}

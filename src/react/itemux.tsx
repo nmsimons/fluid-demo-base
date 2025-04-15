@@ -3,12 +3,12 @@ import { Item, Note, Shape } from "../schema/app_schema.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { ShapeView } from "./shapeux.js";
 import { Tree } from "fluid-framework";
-import { DragManager } from "../utils/Interfaces/DragManager.js";
 import { DragAndRotatePackage } from "../utils/drag.js";
 import { DeleteButton, VoteButton } from "./buttonux.js";
 import { Toolbar, ToolbarGroup } from "@fluentui/react-components";
 import { NoteView } from "./noteux.js";
 import { useTree } from "./useTree.js";
+import { useDragManager } from "./useDragManager.js";
 
 const getContentElement = (item: Item): JSX.Element => {
 	if (Tree.is(item.content, Shape)) {
@@ -53,33 +53,18 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 		});
 	}, [itemInval]);
 
-	useEffect(() => {
-		return dragListener("updated", presence.drag);
-	}, []);
-
-	useEffect(() => {
-		return dragListener("localUpdated", presence.drag);
-	}, []);
-
-	const dragListener = (
-		event: "localUpdated" | "updated",
-		drag: DragManager<DragAndRotatePackage>,
-	) => {
-		const unsubscribe = drag.events.on(
-			event,
-			(dragData: { value: DragAndRotatePackage | null }) => {
-				if (dragData.value && dragData.value.id === item.id) {
-					setItemProps({
-						left: dragData.value.x,
-						top: dragData.value.y,
-						zIndex: index,
-						transform: `rotate(${dragData.value.rotation}deg)`,
-					});
-				}
-			},
-		);
-		return unsubscribe;
+	const setPropsOnDrag = (dragData: DragAndRotatePackage) => {
+		if (dragData && dragData.id === item.id) {
+			setItemProps({
+				left: dragData.x,
+				top: dragData.y,
+				zIndex: index,
+				transform: `rotate(${dragData.rotation}deg)`,
+			});
+		}
 	};
+
+	useDragManager(presence.drag, setPropsOnDrag);
 
 	useEffect(() => {
 		const unsubscribe = presence.selection.events.on("localUpdated", () => {

@@ -3,7 +3,7 @@ import { Button, Textarea } from "@fluentui/react-components";
 import { ArrowLeftFilled } from "@fluentui/react-icons";
 import React, { useState } from "react";
 import { Pane } from "./paneux.js";
-import { asTreeViewAlpha, TreeView, TreeBranch } from "@fluidframework/tree/alpha";
+import { TreeBranch, TreeViewAlpha } from "@fluidframework/tree/alpha";
 import { createFunctioningAgent } from "@fluidframework/tree-agent/alpha";
 import { App } from "../schema/app_schema.js";
 import { ChatOpenAI } from "@langchain/openai";
@@ -11,8 +11,8 @@ import { ChatOpenAI } from "@langchain/openai";
 export function PromptPane(props: {
 	hidden: boolean;
 	setHidden: (hidden: boolean) => void;
-	tree: TreeView<typeof App>;
-	setView: (view: TreeView<typeof App>) => void;
+	tree: TreeViewAlpha<typeof App>;
+	setView: (view: TreeViewAlpha<typeof App>) => void;
 }): JSX.Element {
 	const { hidden, setHidden, tree, setView } = props;
 	const [response, setResponse] = useState("");
@@ -25,7 +25,7 @@ export function PromptPane(props: {
 
 	const handlePromptSubmit = async (prompt: string) => {
 		const client = new ChatOpenAI({ model: "o3-mini" });
-		const forked = asTreeViewAlpha(tree).fork();
+		const forked = tree.fork();
 		setBranch(forked);
 		const agent = createFunctioningAgent(client, forked, {
 			log: (msg) => updateLog(msg),
@@ -37,7 +37,7 @@ export function PromptPane(props: {
 
 	const handleApplyResponse = () => {
 		if (branch !== undefined) {
-			asTreeViewAlpha(tree).merge(branch);
+			tree.merge(branch);
 			setBranch(undefined);
 			setResponse("");
 			setLog("");
