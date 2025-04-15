@@ -148,21 +148,25 @@ export function ReactApp(props: {
 					<ToolbarGroup>
 						<TooltipButton
 							onClick={() => {
+								if (view !== tree) return;
 								// create a new branch and set it as the current branch
 								const newBranch = tree.fork();
 								setView(newBranch);
 							}}
 							tooltip="Branch"
 							icon={<BranchFilled />}
+							disabled={view !== tree}
 						/>
 						<TooltipButton
 							onClick={() => {
+								if (view === tree) return;
 								// merge the current branch into the main branch
 								tree.merge(view);
 								setView(tree);
 							}}
 							tooltip="Merge"
 							icon={<MergeFilled />}
+							disabled={view === tree}
 						/>
 					</ToolbarGroup>
 					<ToolbarDivider />
