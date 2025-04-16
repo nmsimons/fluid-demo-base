@@ -14,7 +14,7 @@ import {
 	ClientConnectionId,
 } from "@fluidframework/presence/alpha";
 import { Listenable } from "fluid-framework";
-import { SelectionManager, SelectionPackage, Selection } from "./Interfaces/SelectionManager.js";
+import { SelectionManager, Selection } from "./Interfaces/SelectionManager.js";
 
 // A function that creates a new SelectionManager instance
 // with the given presence and workspace.
@@ -26,9 +26,9 @@ export function createTypedSelectionManager(props: {
 	const { presence, workspace, name } = props;
 
 	class SelectionManagerImpl implements SelectionManager<TypedSelection> {
-		initialState: SelectionPackage<TypedSelection> = { selected: [] }; // Default initial state for the selection manager
+		initialState: TypedSelection[] = []; // Default initial state for the selection manager
 
-		state: LatestState<SelectionPackage<TypedSelection>>;
+		state: LatestState<TypedSelection[]>;
 
 		constructor(
 			name: string,
@@ -39,7 +39,7 @@ export function createTypedSelectionManager(props: {
 			this.state = workspace.props[name];
 		}
 
-		public get events(): Listenable<LatestStateEvents<SelectionPackage<TypedSelection>>> {
+		public get events(): Listenable<LatestStateEvents<TypedSelection[]>> {
 			return this.state.events;
 		}
 
@@ -58,7 +58,7 @@ export function createTypedSelectionManager(props: {
 
 		/** Test if the given id is selected by the local client */
 		public testSelection(sel: TypedSelection) {
-			return this._testForInclusion(sel, this.state.local.selected);
+			return this._testForInclusion(sel, this.state.local);
 		}
 
 		/** Test if the given id is selected by any remote client */
@@ -66,7 +66,7 @@ export function createTypedSelectionManager(props: {
 			const remoteSelectedClients: string[] = [];
 			for (const cv of this.state.clientValues()) {
 				if (cv.client.getConnectionStatus() === "Connected") {
-					if (this._testForInclusion(sel, cv.value.selected)) {
+					if (this._testForInclusion(sel, cv.value)) {
 						remoteSelectedClients.push(cv.client.sessionId);
 					}
 				}
@@ -83,10 +83,10 @@ export function createTypedSelectionManager(props: {
 		public setSelection(sel: TypedSelection | TypedSelection[]) {
 			if (Array.isArray(sel)) {
 				// If an array of selections is provided, set it directly
-				this.state.local = { selected: sel };
+				this.state.local = sel;
 			} else {
 				// Otherwise, set the single selection
-				this.state.local = { selected: [sel] };
+				this.state.local = [sel];
 			}
 			/**
 			 * Note: This will overwrite the current local selection with the new one.
@@ -107,22 +107,22 @@ export function createTypedSelectionManager(props: {
 
 		/** Add the given id to the selection */
 		public addToSelection(sel: TypedSelection) {
-			const arr: TypedSelection[] = this.state.local.selected.slice();
+			const arr: TypedSelection[] = this.state.local.slice();
 			if (!this._testForInclusion(sel, arr)) {
 				arr.push(sel);
 			}
-			this.state.local = { selected: arr };
+			this.state.local = arr;
 		}
 
 		/** Remove the given id from the selection */
 		public removeFromSelection(sel: TypedSelection) {
-			const arr: TypedSelection[] = this.state.local.selected.filter((s) => s.id !== sel.id);
-			this.state.local = { selected: arr };
+			const arr: TypedSelection[] = this.state.local.filter((s) => s.id !== sel.id);
+			this.state.local = arr;
 		}
 
 		/** Get the current local selection array */
 		public getLocalSelection(): readonly TypedSelection[] {
-			return this.state.local.selected;
+			return this.state.local;
 		}
 
 		/** Get the current remote selection map where the key is the selected item id and the value is an array of client ids */
@@ -130,7 +130,7 @@ export function createTypedSelectionManager(props: {
 			const remoteSelected = new Map<TypedSelection, string[]>();
 			for (const cv of this.state.clientValues()) {
 				if (cv.client.getConnectionStatus() === "Connected") {
-					for (const sel of cv.value.selected) {
+					for (const sel of cv.value) {
 						if (!remoteSelected.has(sel)) {
 							remoteSelected.set(sel, []);
 						}
@@ -146,19 +146,7 @@ export function createTypedSelectionManager(props: {
 			sel: TypedSelection,
 			collection: readonly TypedSelection[],
 		): boolean {
-			/**
-			 * Helper function to test for inclusion of a selection in a collection.
-			 */
-			if (!collection || collection.length === 0) {
-				return false;
-			}
-
-			for (const s of collection) {
-				if (s.id === sel.id && s.type === sel.type) {
-					return true;
-				}
-			}
-			return false;
+			return !!collection.find((s) => s.id === sel.id);
 		}
 	}
 
@@ -173,9 +161,9 @@ export function createSelectionManager(props: {
 	const { presence, workspace, name } = props;
 
 	class SelectionManagerImpl implements SelectionManager {
-		initialState: SelectionPackage = { selected: [] }; // Default initial state for the selection manager
+		initialState = []; // Default initial state for the selection manager
 
-		state: LatestState<SelectionPackage>;
+		state: LatestState<Selection[]>;
 
 		constructor(
 			name: string,
@@ -186,7 +174,7 @@ export function createSelectionManager(props: {
 			this.state = workspace.props[name];
 		}
 
-		public get events(): Listenable<LatestStateEvents<SelectionPackage<Selection>>> {
+		public get events(): Listenable<LatestStateEvents<Selection[]>> {
 			return this.state.events;
 		}
 
@@ -205,7 +193,7 @@ export function createSelectionManager(props: {
 
 		/** Test if the given id is selected by the local client */
 		public testSelection(sel: Selection) {
-			return this._testForInclusion(sel, this.state.local.selected);
+			return this._testForInclusion(sel, this.state.local);
 		}
 
 		/** Test if the given id is selected by any remote client */
@@ -213,7 +201,7 @@ export function createSelectionManager(props: {
 			const remoteSelectedClients: string[] = [];
 			for (const cv of this.state.clientValues()) {
 				if (cv.client.getConnectionStatus() === "Connected") {
-					if (this._testForInclusion(sel, cv.value.selected)) {
+					if (this._testForInclusion(sel, cv.value)) {
 						remoteSelectedClients.push(cv.client.sessionId);
 					}
 				}
@@ -229,9 +217,9 @@ export function createSelectionManager(props: {
 		/** Change the selection to the given id or array of ids */
 		public setSelection(sel: Selection | Selection[]) {
 			if (Array.isArray(sel)) {
-				this.state.local = { selected: sel };
+				this.state.local = sel;
 			} else {
-				this.state.local = { selected: [sel] };
+				this.state.local = [sel];
 			}
 			return;
 		}
@@ -248,35 +236,26 @@ export function createSelectionManager(props: {
 
 		/** Add the given id to the selection */
 		public addToSelection(sel: Selection) {
-			const arr: Selection[] = this.state.local.selected.slice();
+			const arr: Selection[] = this.state.local.slice();
 			if (!this._testForInclusion(sel, arr)) {
 				arr.push(sel);
 			}
-			this.state.local = { selected: arr };
+			this.state.local = arr;
 		}
 
 		/** Remove the given id from the selection */
 		public removeFromSelection(sel: Selection) {
-			const arr: Selection[] = this.state.local.selected.filter((s) => s.id !== sel.id);
-			this.state.local = { selected: arr };
+			const arr: Selection[] = this.state.local.filter((s) => s.id !== sel.id);
+			this.state.local = arr;
 		}
 
 		private _testForInclusion(sel: Selection, collection: readonly Selection[]): boolean {
-			if (!collection || collection.length === 0) {
-				return false;
-			}
-
-			for (const s of collection) {
-				if (s.id === sel.id) {
-					return true;
-				}
-			}
-			return false;
+			return !!collection.find((s) => s.id === sel.id);
 		}
 
 		/** Get the current local selection array */
 		public getLocalSelection(): readonly Selection[] {
-			return this.state.local.selected;
+			return this.state.local;
 		}
 
 		/** Get the current remote selection map where the key is the selected item id and the value is an array of client ids */
@@ -284,7 +263,7 @@ export function createSelectionManager(props: {
 			const remoteSelected = new Map<Selection, string[]>();
 			for (const cv of this.state.clientValues()) {
 				if (cv.client.getConnectionStatus() === "Connected") {
-					for (const sel of cv.value.selected) {
+					for (const sel of cv.value) {
 						if (!remoteSelected.has(sel)) {
 							remoteSelected.set(sel, []);
 						}

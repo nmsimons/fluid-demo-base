@@ -8,9 +8,12 @@ import { DeleteButton, VoteButton } from "./buttonux.js";
 import { Toolbar, ToolbarGroup } from "@fluentui/react-components";
 import { NoteView } from "./noteux.js";
 import { useTree } from "./useTree.js";
-import { useDragManager } from "./useDragManager.js";
+import { usePresenceManager } from "./usePresenceManger.js";
+import { PresenceManager } from "../utils/Interfaces/PresenceManager.js";
 
 const getContentElement = (item: Item): JSX.Element => {
+	useTree(item);
+
 	if (Tree.is(item.content, Shape)) {
 		return <ShapeView shape={item.content} />;
 	} else if (Tree.is(item.content, Note)) {
@@ -64,28 +67,19 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 		}
 	};
 
-	useDragManager(presence.drag, setPropsOnDrag);
-
-	useEffect(() => {
-		const unsubscribe = presence.selection.events.on("localUpdated", () => {
-			setSelected(presence.selection.testSelection({ id: item.id }));
-		});
-		return unsubscribe;
-	}, []);
-
-	useEffect(() => {
-		const unsubscribe = presence.selection.events.on("updated", () => {
+	usePresenceManager(presence.drag as PresenceManager<DragAndRotatePackage>, setPropsOnDrag);
+	usePresenceManager(
+		presence.selection,
+		() => {
 			setRemoteSelected(presence.selection.testRemoteSelection({ id: item.id }));
-		});
-		return unsubscribe;
-	}, []);
-
-	useEffect(() => {
-		const unsubscribe = presence.selection.clients.events.on("attendeeDisconnected", () => {
+		},
+		(update) => {
+			setSelected(update.some((selection) => selection.id === item.id));
+		},
+		() => {
 			setRemoteSelected(presence.selection.testRemoteSelection({ id: item.id }));
-		});
-		return unsubscribe;
-	}, []);
+		},
+	);
 
 	const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
 		e.stopPropagation();
@@ -217,6 +211,9 @@ export function PresenceBox(props: { remoteSelected: boolean }): JSX.Element {
 
 export function SelectionBox(props: { selected: boolean; item: Item }): JSX.Element {
 	const { selected, item } = props;
+
+	useTree(item);
+
 	const padding = 8;
 
 	return (
@@ -238,6 +235,8 @@ export function SelectionBox(props: { selected: boolean; item: Item }): JSX.Elem
 export function SelectionControls(props: { item: Item; padding: number }): JSX.Element {
 	const { item, padding } = props;
 
+	useTree(item);
+
 	const height = 40;
 
 	return (
@@ -258,6 +257,9 @@ export function SelectionControls(props: { item: Item; padding: number }): JSX.E
 
 export function ItemToolbar(props: { item: Item }): JSX.Element {
 	const { item } = props;
+
+	useTree(item);
+
 	return (
 		<Toolbar
 			size="small"
@@ -281,6 +283,8 @@ export function ItemToolbar(props: { item: Item }): JSX.Element {
 
 export function RotateHandle(props: { item: Item }): JSX.Element {
 	const { item } = props;
+
+	useTree(item);
 
 	const [rotating, setRotating] = useState(false);
 	const offset = useRef({ x: 0, y: 0 });

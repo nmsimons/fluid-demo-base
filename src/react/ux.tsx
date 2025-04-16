@@ -47,6 +47,7 @@ import {
 	MergeFilled,
 } from "@fluentui/react-icons";
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
+import { useTree } from "./useTree.js";
 
 export function ReactApp(props: {
 	tree: TreeViewAlpha<typeof App>;
@@ -64,6 +65,10 @@ export function ReactApp(props: {
 	const [commentPaneHidden, setCommentPaneHidden] = useState(true);
 	const [selectedItem, setSelectedItem] = useState<Item | App | Group>(tree.root);
 	const [view, setView] = useState<TreeViewAlpha<typeof App>>(tree);
+
+	useTree(tree.root);
+	useTree(view.root.items);
+	useTree(view.root.comments);
 
 	useEffect(() => {
 		const updateConnectionState = () => {
@@ -89,10 +94,6 @@ export function ReactApp(props: {
 	/** Unsubscribe to undo-redo events when the component unmounts */
 	useEffect(() => {
 		return undoRedo.dispose;
-	}, []);
-
-	useEffect(() => {
-		console.log("view changed", view);
 	}, [view]);
 
 	useEffect(() => {
@@ -107,7 +108,7 @@ export function ReactApp(props: {
 			setSelectedItem(selectedItem ?? view.root);
 		});
 		return unsubscribe;
-	}, []);
+	}, [view, selection]);
 
 	return (
 		<PresenceContext.Provider

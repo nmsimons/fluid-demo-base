@@ -5,7 +5,7 @@ import { PresenceManager } from "./PresenceManager.js";
 // It extends the PresenceManager interface to provide additional methods
 // The generic type TSelection extends { id: string } ensures that the selection items have an 'id' property
 export interface SelectionManager<TSelection extends Selection = Selection> // Default type is Selection if not specified
-	extends PresenceManager<SelectionPackage<TSelection>> {
+	extends PresenceManager<TSelection[]> {
 	/**
 	 * Test if the given item is selected by the local client
 	 * @param sel The selection to test
@@ -59,8 +59,4 @@ export interface SelectionManager<TSelection extends Selection = Selection> // D
 
 export type Selection = {
 	id: string;
-};
-
-export type SelectionPackage<TSelection extends Selection = Selection> = {
-	selected: TSelection[];
 };

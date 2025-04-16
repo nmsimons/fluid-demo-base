@@ -18,12 +18,15 @@ import {
 } from "@fluentui/react-icons";
 import { ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { PresenceContext } from "./PresenceContext.js";
+import { useTree } from "./useTree.js";
 
 export function NewShapeButton(props: {
 	items: Items;
 	canvasSize: { width: number; height: number };
 }): JSX.Element {
 	const { items, canvasSize } = props;
+
+	useTree(items);
 
 	const maxSize = 120;
 	const minSize = 100;
@@ -80,7 +83,7 @@ export function NewNoteButton(props: {
 	canvasSize: { width: number; height: number };
 }): JSX.Element {
 	const { items, canvasSize } = props;
-
+	useTree(items);
 	const presence = useContext(PresenceContext);
 
 	const handleClick = (e: React.MouseEvent) => {
@@ -135,6 +138,7 @@ export function DeleteButton(props: { delete: () => void }): JSX.Element {
 
 export function VoteButton(props: { vote: Vote }): JSX.Element {
 	const { vote } = props;
+	useTree(vote);
 	const presence = useContext(PresenceContext);
 	const userId = presence.users.getMyself().value.id;
 
@@ -154,6 +158,7 @@ export function VoteButton(props: { vote: Vote }): JSX.Element {
 
 export function CommentButton(props: { item: Item }): JSX.Element {
 	const { item } = props;
+	useTree(item);
 	const presence = useContext(PresenceContext);
 	const handleClick = (e: React.MouseEvent<Element, MouseEvent>) => {
 		e.stopPropagation();

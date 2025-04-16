@@ -4,8 +4,13 @@
 import React from "react";
 import { Note } from "../schema/app_schema.js";
 import { Textarea } from "@fluentui/react-components";
+import { useTree } from "./useTree.js";
 
 export function NoteView(props: { note: Note }): JSX.Element {
+	const { note } = props;
+
+	useTree(note);
+
 	return (
 		<div
 			className="flex items-center justify-center shadow-md"
@@ -21,6 +26,8 @@ export function NoteView(props: { note: Note }): JSX.Element {
 
 export function NoteText(props: { note: Note }): JSX.Element {
 	const { note } = props;
+
+	useTree(note);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		note.text = e.target.value;

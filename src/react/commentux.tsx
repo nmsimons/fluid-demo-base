@@ -14,6 +14,7 @@ export function CommentPane(props: {
 	const { hidden, setHidden, item } = props;
 	const presence = useContext(PresenceContext);
 	const [title, setTitle] = useState("Comments");
+	useTree(item);
 	useTree(item.comments);
 
 	useEffect(() => {
@@ -50,6 +51,7 @@ export function CommentPane(props: {
 
 export function CommentList(props: { comments: Comments }): JSX.Element {
 	const { comments } = props;
+	useTree(comments);
 	return (
 		<div className="flex flex-col grow space-y-2 overflow-y-auto">
 			{comments.map((comment) => (
@@ -61,6 +63,7 @@ export function CommentList(props: { comments: Comments }): JSX.Element {
 
 export function CommentText(props: { comment: Comment }): JSX.Element {
 	const { comment } = props;
+	useTree(comment);
 	return <div className="p-2 border rounded bg-gray-50">{comment.text}</div>;
 }
 
