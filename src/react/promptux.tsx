@@ -3,7 +3,7 @@ import { Button, Textarea } from "@fluentui/react-components";
 import { ArrowLeftFilled } from "@fluentui/react-icons";
 import React, { useState } from "react";
 import { Pane } from "./paneux.js";
-import { TreeBranch, TreeViewAlpha } from "@fluidframework/tree/alpha";
+import { TreeViewAlpha } from "@fluidframework/tree/alpha";
 import { createFunctioningAgent } from "@fluidframework/tree-agent/alpha";
 import { App } from "../schema/app_schema.js";
 import { ChatOpenAI } from "@langchain/openai";
@@ -11,49 +11,35 @@ import { ChatOpenAI } from "@langchain/openai";
 export function PromptPane(props: {
 	hidden: boolean;
 	setHidden: (hidden: boolean) => void;
-	tree: TreeViewAlpha<typeof App>;
-	setView: (view: TreeViewAlpha<typeof App>) => void;
+	view: TreeViewAlpha<typeof App>;
 }): JSX.Element {
-	const { hidden, setHidden, tree, setView } = props;
+	const { hidden, setHidden, view } = props;
 	const [response, setResponse] = useState("");
 	const [log, setLog] = useState("");
-	const [branch, setBranch] = useState<TreeBranch | undefined>();
 
 	const updateLog = (msg: string) => {
 		setLog((prev) => prev + msg + "\n");
 	};
 
 	const handlePromptSubmit = async (prompt: string) => {
-		const client = new ChatOpenAI({ model: "o3-mini" });
-		const forked = tree.fork();
-		setBranch(forked);
-		const agent = createFunctioningAgent(client, forked, {
+		const client = new ChatOpenAI({ model: "o4-mini" });
+		const agent = createFunctioningAgent(client, view, {
 			log: (msg) => updateLog(msg),
 		});
 		const r = await agent.query(prompt);
 		setResponse(r ?? "LLM query failed.");
-		setView(forked);
 	};
 
-	const handleApplyResponse = () => {
-		if (branch !== undefined) {
-			tree.merge(branch);
-			setBranch(undefined);
-			setResponse("");
-			setLog("");
-		}
-		setView(tree);
+	const handleCancelResponse = () => {
+		setResponse("");
+		setLog("");
 	};
 
 	return (
 		<Pane hidden={hidden} setHidden={setHidden} title="Prompt">
 			<PromptLog log={log} />
 			<PromptOutput response={response} />
-			<ResponseButtons
-				response={response}
-				callback={handleApplyResponse}
-				cancelCallback={() => setBranch(undefined)}
-			/>
+			<ResponseButtons response={response} cancelCallback={handleCancelResponse} />
 			<PromptInput callback={handlePromptSubmit} />
 		</Pane>
 	);
@@ -125,14 +111,12 @@ export function PromptOutput(props: { response: string }): JSX.Element {
 
 export function ResponseButtons(props: {
 	response: string;
-	callback: (response: string) => void;
 	cancelCallback: () => void;
 }): JSX.Element {
-	const { response, callback, cancelCallback } = props;
+	const { response, cancelCallback } = props;
 
 	return (
 		<div className="flex flex-row gap-x-2">
-			<ApplyResponseButton response={response} callback={callback} />
 			<CancelResponseButton response={response} callback={cancelCallback} />
 		</div>
 	);
@@ -167,13 +151,13 @@ export function CancelResponseButton(props: {
 
 	return (
 		<Button
-			className="flex shrink-0"
+			className="flex shrink-0 grow"
 			onClick={() => {
 				callback();
 			}}
 			disabled={response.trim() === ""}
 		>
-			Cancel
+			Clear
 		</Button>
 	);
 }

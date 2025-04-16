@@ -24,6 +24,9 @@ import {
 	AvatarGroupItem,
 	AvatarGroupPopover,
 	AvatarGroupProps,
+	MessageBar,
+	MessageBarBody,
+	MessageBarTitle,
 	partitionAvatarGroupItems,
 	Text,
 	Toolbar,
@@ -94,7 +97,7 @@ export function ReactApp(props: {
 	/** Unsubscribe to undo-redo events when the component unmounts */
 	useEffect(() => {
 		return undoRedo.dispose;
-	}, [view]);
+	}, []);
 
 	useEffect(() => {
 		const unsubscribe = selection.events.on("localUpdated", () => {
@@ -148,26 +151,13 @@ export function ReactApp(props: {
 					<ToolbarDivider />
 					<ToolbarGroup>
 						<TooltipButton
-							onClick={() => {
-								if (view !== tree) return;
-								// create a new branch and set it as the current branch
-								const newBranch = tree.fork();
-								setView(newBranch);
-							}}
+							onClick={() => createBranch(tree, view, setView)}
 							tooltip="Branch"
 							icon={<BranchFilled />}
 							disabled={view !== tree}
 						/>
 						<TooltipButton
-							onClick={() => {
-								if (view === tree) return;
-								// merge the current branch into the main branch
-								tree.merge(view);
-								// set the main branch as the current branch
-								setView(tree);
-								// dispose of the branch
-								view.dispose();
-							}}
+							onClick={() => mergeBranch(tree, view, setView)}
 							tooltip="Merge"
 							icon={<MergeFilled />}
 							disabled={view === tree}
@@ -179,6 +169,11 @@ export function ReactApp(props: {
 						<RedoButton redo={() => undoRedo.redo()} />
 					</ToolbarGroup>
 				</Toolbar>
+				{view !== tree ? (
+					<MessageBarComponent message="You are working in a branch. Until the branch is merged, your changes are not saved." />
+				) : (
+					<></>
+				)}
 				<div className="flex h-[calc(100vh-96px)] w-full flex-row ">
 					<Canvas
 						items={view.root.items}
@@ -194,13 +189,36 @@ export function ReactApp(props: {
 					<PromptPane
 						hidden={promptPaneHidden}
 						setHidden={setPromptPaneHidden}
-						tree={tree}
-						setView={setView}
+						view={view}
 					/>
 				</div>
 			</div>
 		</PresenceContext.Provider>
 	);
+}
+
+export function createBranch(
+	main: TreeViewAlpha<typeof App>,
+	currentView: TreeViewAlpha<typeof App>,
+	setView: (view: TreeViewAlpha<typeof App>) => void,
+) {
+	// if the current view is not the same as the tree, return the current view
+	// otherwise, create a new branch from the tree and return it
+	if (currentView !== main) return currentView;
+	setView(main.fork());
+}
+
+export function mergeBranch(
+	main: TreeViewAlpha<typeof App>,
+	currentView: TreeViewAlpha<typeof App>,
+	setView: (view: TreeViewAlpha<typeof App>) => void,
+) {
+	// if the current view is the same as main, return the current view
+	// otherwise, merge the current view into main and dispose of the current view
+	if (currentView === main) return currentView;
+	main.merge(currentView);
+	setView(main);
+	currentView.dispose();
 }
 
 export function Header(props: { saved: boolean; connectionState: string }): JSX.Element {
@@ -316,3 +334,14 @@ export const Facepile = (props: Partial<AvatarGroupProps>) => {
 		</AvatarGroup>
 	);
 };
+
+export function MessageBarComponent(props: { message: string }): JSX.Element {
+	const { message } = props;
+	return (
+		<MessageBar className="shadow-lg">
+			<MessageBarBody>
+				<MessageBarTitle>{message}</MessageBarTitle>
+			</MessageBarBody>
+		</MessageBar>
+	);
+}
