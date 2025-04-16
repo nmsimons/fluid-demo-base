@@ -166,7 +166,7 @@ export function ReactApp(props: {
 								// set the main branch as the current branch
 								setView(tree);
 								// dispose of the branch
-								// view.dispose();
+								view.dispose();
 							}}
 							tooltip="Merge"
 							icon={<MergeFilled />}
