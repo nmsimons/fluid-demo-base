@@ -4,7 +4,7 @@
  */
 
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { App, Group, Item } from "../schema/app_schema.js";
+import { App } from "../schema/app_schema.js";
 import "../output.css";
 import { ConnectionState, IFluidContainer } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
@@ -63,7 +63,7 @@ export function ReactApp(props: {
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 	const [promptPaneHidden, setPromptPaneHidden] = useState(false);
 	const [commentPaneHidden, setCommentPaneHidden] = useState(true);
-	const [selectedItem, setSelectedItem] = useState<Item | App | Group>(tree.root);
+	const [selectedItemId, setSelectedItemId] = useState<string>("");
 	const [view, setView] = useState<TreeViewAlpha<typeof App>>(tree);
 
 	useTree(tree.root);
@@ -83,13 +83,13 @@ export function ReactApp(props: {
 			}
 		};
 		updateConnectionState();
-		setSaved(!props.container.isDirty);
+		setSaved(!container.isDirty);
 		container.on("connected", updateConnectionState);
 		container.on("disconnected", updateConnectionState);
 		container.on("dirty", () => setSaved(false));
 		container.on("saved", () => setSaved(true));
 		container.on("disposed", updateConnectionState);
-	}, []);
+	}, [container]);
 
 	/** Unsubscribe to undo-redo events when the component unmounts */
 	useEffect(() => {
@@ -105,7 +105,7 @@ export function ReactApp(props: {
 
 			const selectedItem = view.root.items.find((item) => item.id === itemId);
 
-			setSelectedItem(selectedItem ?? view.root);
+			setSelectedItemId(selectedItem?.id ?? "");
 		});
 		return unsubscribe;
 	}, [view, selection]);
@@ -163,7 +163,10 @@ export function ReactApp(props: {
 								if (view === tree) return;
 								// merge the current branch into the main branch
 								tree.merge(view);
+								// set the main branch as the current branch
 								setView(tree);
+								// dispose of the branch
+								// view.dispose();
 							}}
 							tooltip="Merge"
 							icon={<MergeFilled />}
@@ -185,7 +188,8 @@ export function ReactApp(props: {
 					<CommentPane
 						hidden={commentPaneHidden}
 						setHidden={setCommentPaneHidden}
-						item={selectedItem}
+						itemId={selectedItemId}
+						app={tree.root}
 					/>
 					<PromptPane
 						hidden={promptPaneHidden}

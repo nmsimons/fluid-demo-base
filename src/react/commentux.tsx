@@ -9,14 +9,15 @@ import { useTree } from "./useTree.js";
 export function CommentPane(props: {
 	hidden: boolean;
 	setHidden: (hidden: boolean) => void;
-	item: Item | Group | App;
+	itemId: string;
+	app: App;
 }): JSX.Element {
-	const { hidden, setHidden, item } = props;
+	const { hidden, setHidden, app } = props;
 	const presence = useContext(PresenceContext);
 	const [title, setTitle] = useState("Comments");
-	useTree(item);
-	useTree(item.comments);
 
+	useTree(app);
+	const item = app.items.find((item) => item.id === props.itemId) ?? app;
 	useEffect(() => {
 		if (item instanceof Group) {
 			setTitle("Group Comments");

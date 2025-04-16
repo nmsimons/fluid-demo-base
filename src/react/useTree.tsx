@@ -3,15 +3,17 @@ import { useEffect, useState } from "react";
 import { Tree } from "fluid-framework";
 import { TreeNode } from "@fluidframework/tree/alpha";
 
-export function useTree(node: TreeNode): object {
+export function useTree(node: TreeNode, deep: boolean = false): object {
 	const [inval, setInval] = useState({});
 
 	useEffect(() => {
-		const unsubscribe = Tree.on(node, "nodeChanged", () => {
+		let eventName: "nodeChanged" | "treeChanged" = "nodeChanged";
+		if (deep) eventName = "treeChanged";
+		const unsubscribe = Tree.on(node, eventName, () => {
 			setInval({});
 		});
 		return unsubscribe;
-	}, [node]);
+	}, [node, deep]);
 
 	return inval;
 }
