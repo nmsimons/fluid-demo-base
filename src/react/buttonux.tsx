@@ -7,8 +7,6 @@ import React, { JSX, useContext } from "react";
 import { Item, Items, Shape, Vote, Comment, DateTime, Note } from "../schema/app_schema.js";
 import {
 	DismissFilled,
-	ArrowUndoFilled,
-	ArrowRedoFilled,
 	ShapesRegular,
 	ThumbLikeFilled,
 	ThumbLikeRegular,
@@ -120,16 +118,6 @@ export function NewNoteButton(props: {
 const getRandomNumber = (min: number, max: number): number => {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 };
-
-export function UndoButton(props: { undo: () => void }): JSX.Element {
-	const { undo } = props;
-	return <TooltipButton tooltip="Undo" onClick={() => undo()} icon={<ArrowUndoFilled />} />;
-}
-
-export function RedoButton(props: { redo: () => void }): JSX.Element {
-	const { redo } = props;
-	return <TooltipButton onClick={() => redo()} icon={<ArrowRedoFilled />} tooltip="Redo" />;
-}
 
 export function DeleteButton(props: { delete: () => void }): JSX.Element {
 	const { delete: deleteFunc } = props;

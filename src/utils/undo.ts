@@ -69,7 +69,19 @@ export function createUndoRedoStacks(events: Listenable<TreeViewEvents>): undoRe
 		revertFromStack(redoStack);
 	}
 
-	return { undo, redo, dispose };
+	return {
+		undo,
+		redo,
+		dispose,
+		canUndo: () => undoStack.length > 0,
+		canRedo: () => redoStack.length > 0,
+	};
 }
 
-export type undoRedo = { undo: () => void; redo: () => void; dispose: () => void };
+export type undoRedo = {
+	undo: () => void;
+	redo: () => void;
+	dispose: () => void;
+	canUndo: () => boolean;
+	canRedo: () => boolean;
+};

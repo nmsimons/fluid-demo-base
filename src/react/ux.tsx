@@ -10,14 +10,7 @@ import { ConnectionState, IFluidContainer } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
-import {
-	UndoButton,
-	RedoButton,
-	NewShapeButton,
-	ShowPaneButton,
-	NewNoteButton,
-	TooltipButton,
-} from "./buttonux.js";
+import { NewShapeButton, ShowPaneButton, NewNoteButton, TooltipButton } from "./buttonux.js";
 import {
 	Avatar,
 	AvatarGroup,
@@ -42,11 +35,14 @@ import { PromptPane } from "./promptux.js";
 import { TypedSelection } from "../utils/selection.js";
 import { CommentPane } from "./commentux.js";
 import {
+	ArrowRedoFilled,
+	ArrowUndoFilled,
 	BranchFilled,
 	ChatFilled,
 	ChatRegular,
 	CommentFilled,
 	CommentRegular,
+	DeleteRegular,
 	MergeFilled,
 } from "@fluentui/react-icons";
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
@@ -133,6 +129,15 @@ export function ReactApp(props: {
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
+						<TooltipButton
+							tooltip="Clear canvas"
+							icon={<DeleteRegular />}
+							onClick={() => view.root.items.removeRange()}
+							disabled={view.root.items.length === 0}
+						/>
+					</ToolbarGroup>
+					<ToolbarDivider />
+					<ToolbarGroup>
 						<ShowPaneButton
 							hiddenIcon={<CommentRegular />}
 							shownIcon={<CommentFilled />}
@@ -165,8 +170,18 @@ export function ReactApp(props: {
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
-						<UndoButton undo={() => undoRedo.undo()} />
-						<RedoButton redo={() => undoRedo.redo()} />
+						<TooltipButton
+							tooltip="Undo"
+							onClick={() => undoRedo.undo()}
+							icon={<ArrowUndoFilled />}
+							disabled={!undoRedo.canUndo()}
+						/>
+						<TooltipButton
+							tooltip="Redo"
+							onClick={() => undoRedo.redo()}
+							icon={<ArrowRedoFilled />}
+							disabled={!undoRedo.canRedo()}
+						/>
 					</ToolbarGroup>
 				</Toolbar>
 				{view !== tree ? (
@@ -228,7 +243,7 @@ export function Header(props: { saved: boolean; connectionState: string }): JSX.
 		<div className="h-[48px] flex shrink-0 flex-row items-center justify-between bg-black text-base text-white z-40 w-full text-nowrap">
 			<div className="flex items-center">
 				<div className="flex ml-2 mr-8">
-					<Text weight="bold">Table</Text>
+					<Text weight="bold">Fluid Framework Demo</Text>
 				</div>
 			</div>
 			<div className="flex flex-row items-center m-2">

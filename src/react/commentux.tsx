@@ -5,6 +5,7 @@ import { Pane } from "./paneux.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { App, Comment, Comments, Group, Item, Shape } from "../schema/app_schema.js";
 import { useTree } from "./useTree.js";
+import { VoteButton } from "./buttonux.js";
 
 export function CommentPane(props: {
 	hidden: boolean;
@@ -56,16 +57,41 @@ export function CommentList(props: { comments: Comments }): JSX.Element {
 	return (
 		<div className="flex flex-col grow space-y-2 overflow-y-auto">
 			{comments.map((comment) => (
-				<CommentText key={comment.id} comment={comment} />
+				<CommentView key={comment.id} comment={comment} />
 			))}
 		</div>
 	);
 }
 
-export function CommentText(props: { comment: Comment }): JSX.Element {
+export function CommentView(props: { comment: Comment }): JSX.Element {
 	const { comment } = props;
-	useTree(comment);
-	return <div className="p-2 border rounded bg-gray-50">{comment.text}</div>;
+	useTree(comment, true);
+	const presence = useContext(PresenceContext);
+	const isMyComment = comment.userId === presence.users.getMyself().value.id;
+	return (
+		<div className={`${isMyComment ? "ml-6" : "mr-6"} `}>
+			<div className={`flex items-center justify-between mb-2`}>
+				<div className="text-xs">{comment.username}</div>
+				<div className="text-xs text-gray-500">
+					{comment.createdAt.value.toLocaleString("en-US", {
+						month: "short",
+						day: "numeric",
+						hour: "2-digit",
+						minute: "2-digit",
+					})}
+				</div>
+			</div>
+			<div className={`p-2 border rounded ${isMyComment ? "bg-indigo-100" : "bg-white"}`}>
+				<div className="">{comment.text}</div>
+				<div className="flex items-center justify-between">
+					<div className="text-xs text-gray-500">{comment.votes.votes.length} votes</div>
+					<div className="flex items-center">
+						<VoteButton vote={comment.votes} />
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 }
 
 export function CommentInput(props: { callback: (comment: string) => void }): JSX.Element {
