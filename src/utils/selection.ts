@@ -5,12 +5,12 @@
  */
 
 import {
-	type IPresence as Presence,
-	Latest as latestStateFactory,
-	LatestValueManagerEvents as LatestStateEvents,
-	PresenceStates as Workspace,
-	LatestValueManager as LatestState,
-	ClientSessionId,
+	type Presence,
+	StateFactory as latestStateFactory,
+	LatestEvents as LatestStateEvents,
+	StatesWorkspace as Workspace,
+	Latest as LatestState,
+	AttendeeId,
 	ClientConnectionId,
 } from "@fluidframework/presence/alpha";
 import { Listenable } from "fluid-framework";
@@ -35,7 +35,7 @@ export function createTypedSelectionManager(props: {
 			workspace: Workspace<{}>,
 			private presence: Presence,
 		) {
-			workspace.add(name, latestStateFactory(this.initialState));
+			workspace.add(name, latestStateFactory.latest(this.initialState));
 			this.state = workspace.props[name];
 		}
 
@@ -44,14 +44,14 @@ export function createTypedSelectionManager(props: {
 		}
 
 		public clients = {
-			getAttendee: (clientId: ClientConnectionId | ClientSessionId) => {
-				return this.presence.getAttendee(clientId);
+			getAttendee: (clientId: ClientConnectionId | AttendeeId) => {
+				return this.presence.attendees.getAttendee(clientId);
 			},
 			getAttendees: () => {
-				return this.presence.getAttendees();
+				return this.presence.attendees.getAttendees();
 			},
 			getMyself: () => {
-				return this.presence.getMyself();
+				return this.presence.attendees.getMyself();
 			},
 			events: this.presence.events,
 		};
@@ -64,10 +64,10 @@ export function createTypedSelectionManager(props: {
 		/** Test if the given id is selected by any remote client */
 		public testRemoteSelection(sel: TypedSelection): string[] {
 			const remoteSelectedClients: string[] = [];
-			for (const cv of this.state.clientValues()) {
-				if (cv.client.getConnectionStatus() === "Connected") {
+			for (const cv of this.state.getRemotes()) {
+				if (cv.attendee.getConnectionStatus() === "Connected") {
 					if (this._testForInclusion(sel, cv.value)) {
-						remoteSelectedClients.push(cv.client.sessionId);
+						remoteSelectedClients.push(cv.attendee.attendeeId);
 					}
 				}
 			}
@@ -128,13 +128,13 @@ export function createTypedSelectionManager(props: {
 		/** Get the current remote selection map where the key is the selected item id and the value is an array of client ids */
 		public getRemoteSelected(): Map<TypedSelection, string[]> {
 			const remoteSelected = new Map<TypedSelection, string[]>();
-			for (const cv of this.state.clientValues()) {
-				if (cv.client.getConnectionStatus() === "Connected") {
+			for (const cv of this.state.getRemotes()) {
+				if (cv.attendee.getConnectionStatus() === "Connected") {
 					for (const sel of cv.value) {
 						if (!remoteSelected.has(sel)) {
 							remoteSelected.set(sel, []);
 						}
-						remoteSelected.get(sel)?.push(cv.client.sessionId);
+						remoteSelected.get(sel)?.push(cv.attendee.attendeeId);
 					}
 				}
 			}
@@ -170,7 +170,7 @@ export function createSelectionManager(props: {
 			workspace: Workspace<{}>,
 			private presence: Presence,
 		) {
-			workspace.add(name, latestStateFactory(this.initialState));
+			workspace.add(name, latestStateFactory.latest(this.initialState));
 			this.state = workspace.props[name];
 		}
 
@@ -179,14 +179,14 @@ export function createSelectionManager(props: {
 		}
 
 		public clients = {
-			getAttendee: (clientId: ClientConnectionId | ClientSessionId) => {
-				return this.presence.getAttendee(clientId);
+			getAttendee: (clientId: ClientConnectionId | AttendeeId) => {
+				return this.presence.attendees.getAttendee(clientId);
 			},
 			getAttendees: () => {
-				return this.presence.getAttendees();
+				return this.presence.attendees.getAttendees();
 			},
 			getMyself: () => {
-				return this.presence.getMyself();
+				return this.presence.attendees.getMyself();
 			},
 			events: this.presence.events,
 		};
@@ -199,10 +199,10 @@ export function createSelectionManager(props: {
 		/** Test if the given id is selected by any remote client */
 		public testRemoteSelection(sel: Selection): string[] {
 			const remoteSelectedClients: string[] = [];
-			for (const cv of this.state.clientValues()) {
-				if (cv.client.getConnectionStatus() === "Connected") {
+			for (const cv of this.state.getRemotes()) {
+				if (cv.attendee.getConnectionStatus() === "Connected") {
 					if (this._testForInclusion(sel, cv.value)) {
-						remoteSelectedClients.push(cv.client.sessionId);
+						remoteSelectedClients.push(cv.attendee.attendeeId);
 					}
 				}
 			}
@@ -261,13 +261,13 @@ export function createSelectionManager(props: {
 		/** Get the current remote selection map where the key is the selected item id and the value is an array of client ids */
 		public getRemoteSelected(): Map<Selection, string[]> {
 			const remoteSelected = new Map<Selection, string[]>();
-			for (const cv of this.state.clientValues()) {
-				if (cv.client.getConnectionStatus() === "Connected") {
+			for (const cv of this.state.getRemotes()) {
+				if (cv.attendee.getConnectionStatus() === "Connected") {
 					for (const sel of cv.value) {
 						if (!remoteSelected.has(sel)) {
 							remoteSelected.set(sel, []);
 						}
-						remoteSelected.get(sel)?.push(cv.client.sessionId);
+						remoteSelected.get(sel)?.push(cv.attendee.attendeeId);
 					}
 				}
 			}

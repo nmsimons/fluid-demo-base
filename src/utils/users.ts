@@ -3,14 +3,14 @@
 // with the given presence and workspace.
 
 import {
-	type IPresence as Presence,
-	Latest as latestStateFactory,
-	LatestValueManagerEvents as LatestStateEvents,
-	PresenceStates as Workspace,
-	LatestValueManager as LatestState,
-	ClientSessionId,
+	type Presence,
+	StateFactory as latestStateFactory,
+	LatestEvents as LatestStateEvents,
+	StatesWorkspace as Workspace,
+	Latest as LatestState,
+	AttendeeId,
 	ClientConnectionId,
-	SessionClientStatus,
+	AttendeeStatus,
 } from "@fluidframework/presence/alpha";
 import { UsersManager, User, UserInfo } from "./Interfaces/UsersManager.js";
 import { Listenable } from "fluid-framework";
@@ -32,7 +32,7 @@ export function createUsersManager(props: {
 			workspace: Workspace<{}>,
 			private presence: Presence,
 		) {
-			workspace.add(name, latestStateFactory(this.initialState));
+			workspace.add(name, latestStateFactory.latest(this.initialState));
 			this.state = workspace.props[name];
 		}
 
@@ -41,31 +41,31 @@ export function createUsersManager(props: {
 		}
 
 		public clients = {
-			getAttendee: (clientId: ClientConnectionId | ClientSessionId) => {
-				return this.presence.getAttendee(clientId);
+			getAttendee: (clientId: ClientConnectionId | AttendeeId) => {
+				return this.presence.attendees.getAttendee(clientId);
 			},
 			getAttendees: () => {
-				return this.presence.getAttendees();
+				return this.presence.attendees.getAttendees();
 			},
 			getMyself: () => {
-				return this.presence.getMyself();
+				return this.presence.attendees.getMyself();
 			},
 			events: this.presence.events,
 		};
 
 		getUsers(): readonly User[] {
-			return [...this.state.clientValues()];
+			return [...this.state.getRemotes()].map((c) => ({ ...c, client: c.attendee }));
 		}
 
 		getConnectedUsers(): readonly User[] {
 			return this.getUsers().filter(
-				(user) => user.client.getConnectionStatus() === SessionClientStatus.Connected,
+				(user) => user.client.getConnectionStatus() === AttendeeStatus.Connected,
 			);
 		}
 
 		getDisconnectedUsers(): readonly User[] {
 			return this.getUsers().filter(
-				(user) => user.client.getConnectionStatus() === SessionClientStatus.Disconnected,
+				(user) => user.client.getConnectionStatus() === AttendeeStatus.Disconnected,
 			);
 		}
 
@@ -74,7 +74,7 @@ export function createUsersManager(props: {
 		}
 
 		getMyself(): User {
-			return { value: this.state.local, client: this.presence.getMyself() };
+			return { value: this.state.local, client: this.presence.attendees.getMyself() };
 		}
 	}
 

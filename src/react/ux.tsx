@@ -299,7 +299,7 @@ export const Facepile = (props: Partial<AvatarGroupProps>) => {
 
 	useEffect(() => {
 		// Check for changes to the user roster and update the avatar group if necessary
-		const unsubscribe = users.events.on("updated", () => {
+		const unsubscribe = users.events.on("remoteUpdated", () => {
 			setUserRoster(users.getConnectedUsers());
 		});
 		return unsubscribe;
@@ -307,10 +307,11 @@ export const Facepile = (props: Partial<AvatarGroupProps>) => {
 
 	useEffect(() => {
 		// Update the user roster when users disconnect
-		const unsubscribe = users.clients.events.on("attendeeDisconnected", () => {
-			setUserRoster(users.getConnectedUsers());
-		});
-		return unsubscribe;
+		// TODO: NICK
+		// const unsubscribe = users.clients.events.on("attendeeDisconnected", () => {
+		// 	setUserRoster(users.getConnectedUsers());
+		// });
+		// return unsubscribe;
 	}, []);
 
 	const { inlineItems, overflowItems } = partitionAvatarGroupItems<User>({
@@ -326,13 +327,13 @@ export const Facepile = (props: Partial<AvatarGroupProps>) => {
 		<AvatarGroup size={24} {...props}>
 			{inlineItems.map((user) => (
 				<Tooltip
-					key={String(user.client.sessionId ?? user.value.name)}
+					key={String(user.client.attendeeId ?? user.value.name)}
 					content={user.value.name}
 					relationship={"label"}
 				>
 					<AvatarGroupItem
 						name={user.value.name}
-						key={String(user.client.sessionId ?? user.value.name)}
+						key={String(user.client.attendeeId ?? user.value.name)}
 					/>
 				</Tooltip>
 			))}
@@ -341,7 +342,7 @@ export const Facepile = (props: Partial<AvatarGroupProps>) => {
 					{overflowItems.map((user) => (
 						<AvatarGroupItem
 							name={user.value.name}
-							key={String(user.client.sessionId ?? user.value.name)}
+							key={String(user.client.attendeeId ?? user.value.name)}
 						/>
 					))}
 				</AvatarGroupPopover>
