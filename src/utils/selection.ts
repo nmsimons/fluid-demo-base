@@ -6,9 +6,9 @@
 
 import {
 	type Presence,
-	StateFactory as latestStateFactory,
-	LatestEvents as LatestStateEvents,
-	StatesWorkspace as Workspace,
+	StateFactory,
+	LatestEvents,
+	StatesWorkspace,
 	Latest as LatestState,
 	AttendeeId,
 	ClientConnectionId,
@@ -20,7 +20,7 @@ import { SelectionManager, Selection } from "./Interfaces/SelectionManager.js";
 // with the given presence and workspace.
 export function createTypedSelectionManager(props: {
 	presence: Presence;
-	workspace: Workspace<{}>;
+	workspace: StatesWorkspace<{}>;
 	name: string;
 }): SelectionManager<TypedSelection> {
 	const { presence, workspace, name } = props;
@@ -32,14 +32,14 @@ export function createTypedSelectionManager(props: {
 
 		constructor(
 			name: string,
-			workspace: Workspace<{}>,
+			workspace: StatesWorkspace<{}>,
 			private presence: Presence,
 		) {
-			workspace.add(name, latestStateFactory.latest(this.initialState));
+			workspace.add(name, StateFactory.latest(this.initialState));
 			this.state = workspace.props[name];
 		}
 
-		public get events(): Listenable<LatestStateEvents<TypedSelection[]>> {
+		public get events(): Listenable<LatestEvents<TypedSelection[]>> {
 			return this.state.events;
 		}
 
@@ -53,7 +53,7 @@ export function createTypedSelectionManager(props: {
 			getMyself: () => {
 				return this.presence.attendees.getMyself();
 			},
-			events: this.presence.events,
+			events: this.presence.attendees.events,
 		};
 
 		/** Test if the given id is selected by the local client */
@@ -155,7 +155,7 @@ export function createTypedSelectionManager(props: {
 
 export function createSelectionManager(props: {
 	presence: Presence;
-	workspace: Workspace<{}>;
+	workspace: StatesWorkspace<{}>;
 	name: string;
 }): SelectionManager {
 	const { presence, workspace, name } = props;
@@ -167,14 +167,14 @@ export function createSelectionManager(props: {
 
 		constructor(
 			name: string,
-			workspace: Workspace<{}>,
+			workspace: StatesWorkspace<{}>,
 			private presence: Presence,
 		) {
-			workspace.add(name, latestStateFactory.latest(this.initialState));
+			workspace.add(name, StateFactory.latest(this.initialState));
 			this.state = workspace.props[name];
 		}
 
-		public get events(): Listenable<LatestStateEvents<Selection[]>> {
+		public get events(): Listenable<LatestEvents<Selection[]>> {
 			return this.state.events;
 		}
 
@@ -188,7 +188,7 @@ export function createSelectionManager(props: {
 			getMyself: () => {
 				return this.presence.attendees.getMyself();
 			},
-			events: this.presence.events,
+			events: this.presence.attendees.events,
 		};
 
 		/** Test if the given id is selected by the local client */

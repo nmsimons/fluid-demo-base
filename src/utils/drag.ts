@@ -3,10 +3,10 @@
 
 import {
 	type Presence,
-	StateFactory as latestStateFactory,
-	LatestEvents as LatestStateEvents,
-	StatesWorkspace as Workspace,
-	Latest as LatestState,
+	StateFactory,
+	LatestEvents,
+	StatesWorkspace,
+	Latest,
 	AttendeeId,
 	ClientConnectionId,
 } from "@fluidframework/presence/alpha";
@@ -16,24 +16,24 @@ import { DragManager } from "./Interfaces/DragManager.js";
 // with the given presence and workspace.
 export function createDragManager(props: {
 	presence: Presence;
-	workspace: Workspace<{}>;
+	workspace: StatesWorkspace<{}>;
 	name: string;
-}): DragManager<DragAndRotatePackage> {
+}): DragManager<DragAndRotatePackage | null> {
 	const { presence, workspace, name } = props;
 
-	class DragManagerImpl implements DragManager<DragAndRotatePackage> {
+	class DragManagerImpl implements DragManager<DragAndRotatePackage | null> {
 		initialState: DragAndRotatePackage | null = null;
-		state: LatestState<DragAndRotatePackage | null>;
+		state: Latest<DragAndRotatePackage | null>;
 
 		constructor(
 			name: string,
-			workspace: Workspace<{}>,
+			workspace: StatesWorkspace<{}>,
 			private presence: Presence,
 		) {
 			workspace.add(
 				name,
-				// TODO: NICK
-				latestStateFactory.latest<DragAndRotatePackage | null>(this.initialState),
+				// @ts-expect-error: using null even though it isn't allowed.
+				StateFactory.latest<DragAndRotatePackage | null>(this.initialState),
 			);
 			this.state = workspace.props[name];
 		}
@@ -43,10 +43,10 @@ export function createDragManager(props: {
 				this.presence.attendees.getAttendee(clientId),
 			getAttendees: () => this.presence.attendees.getAttendees(),
 			getMyself: () => this.presence.attendees.getMyself(),
-			events: this.presence.events,
+			events: this.presence.attendees.events,
 		};
 
-		public get events(): Listenable<LatestStateEvents<DragAndRotatePackage | null>> {
+		public get events(): Listenable<LatestEvents<DragAndRotatePackage | null>> {
 			return this.state.events;
 		}
 

@@ -3,16 +3,16 @@
 
 import { useEffect } from "react";
 import { PresenceManager } from "../utils/Interfaces/PresenceManager.js";
-import { ISessionClient } from "@fluidframework/presence/alpha";
+import { Attendee } from "@fluidframework/presence/alpha";
 
 export function usePresenceManager<TState>(
 	presenceManager: PresenceManager<TState>,
 	runOnChange: (updated: TState) => void,
 	runOnChangeLocal: (updated: TState) => void = runOnChange,
-	runOnDisconnect?: (updated: ISessionClient) => void,
+	runOnDisconnect?: (updated: Attendee) => void,
 ) {
 	useEffect(() => {
-		const unsubscribe = presenceManager.events.on("updated", (updated) => {
+		const unsubscribe = presenceManager.events.on("remoteUpdated", (updated) => {
 			runOnChange(updated.value as TState);
 		});
 		return unsubscribe;
