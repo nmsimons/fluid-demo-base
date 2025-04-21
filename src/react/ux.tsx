@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import React, { JSX, useContext, useEffect, useState } from "react";
+import React, { JSX, useCallback, useContext, useEffect, useState } from "react";
 import { App } from "../schema/app_schema.js";
 import "../output.css";
 import { ConnectionState, IFluidContainer } from "fluid-framework";
@@ -31,22 +31,20 @@ import { User, UsersManager } from "../utils/Interfaces/UsersManager.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { DragManager } from "../utils/Interfaces/DragManager.js";
 import { DragAndRotatePackage } from "../utils/drag.js";
-import { PromptPane } from "./promptux.js";
 import { TypedSelection } from "../utils/selection.js";
 import { CommentPane } from "./commentux.js";
 import {
 	ArrowRedoFilled,
 	ArrowUndoFilled,
-	BranchFilled,
-	ChatFilled,
-	ChatRegular,
+	BotFilled,
+	BotRegular,
 	CommentFilled,
 	CommentRegular,
 	DeleteRegular,
-	MergeFilled,
 } from "@fluentui/react-icons";
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
 import { useTree } from "./useTree.js";
+import { TaskPane } from "./taskux.js";
 
 export function ReactApp(props: {
 	tree: TreeViewAlpha<typeof App>;
@@ -60,7 +58,7 @@ export function ReactApp(props: {
 	const [connectionState, setConnectionState] = useState("");
 	const [saved, setSaved] = useState(false);
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-	const [promptPaneHidden, setPromptPaneHidden] = useState(false);
+	const [taskPaneHidden, setTaskPaneHidden] = useState(true);
 	const [commentPaneHidden, setCommentPaneHidden] = useState(true);
 	const [selectedItemId, setSelectedItemId] = useState<string>("");
 	const [view, setView] = useState<TreeViewAlpha<typeof App>>(tree);
@@ -109,6 +107,11 @@ export function ReactApp(props: {
 		return unsubscribe;
 	}, [view, selection]);
 
+	const setRenderView = useCallback(
+		(branch: TreeViewAlpha<typeof App>) => setView(branch),
+		[setView],
+	);
+
 	return (
 		<PresenceContext.Provider
 			value={{
@@ -146,26 +149,11 @@ export function ReactApp(props: {
 							tooltip="Comments"
 						/>
 						<ShowPaneButton
-							hiddenIcon={<ChatRegular />}
-							shownIcon={<ChatFilled />}
-							hidePane={setPromptPaneHidden}
-							paneHidden={promptPaneHidden}
+							hiddenIcon={<BotRegular />}
+							shownIcon={<BotFilled />}
+							hidePane={setTaskPaneHidden}
+							paneHidden={taskPaneHidden}
 							tooltip="AI Chat"
-						/>
-					</ToolbarGroup>
-					<ToolbarDivider />
-					<ToolbarGroup>
-						<TooltipButton
-							onClick={() => createBranch(tree, view, setView)}
-							tooltip="Branch"
-							icon={<BranchFilled />}
-							disabled={view !== tree}
-						/>
-						<TooltipButton
-							onClick={() => mergeBranch(tree, view, setView)}
-							tooltip="Merge"
-							icon={<MergeFilled />}
-							disabled={view === tree}
 						/>
 					</ToolbarGroup>
 					<ToolbarDivider />
@@ -185,7 +173,7 @@ export function ReactApp(props: {
 					</ToolbarGroup>
 				</Toolbar>
 				{view !== tree ? (
-					<MessageBarComponent message="You are working in a branch. Until the branch is merged, your changes are not saved." />
+					<MessageBarComponent message="While viewing a Task, others will not see your changes (and you will not see theirs) until you complete the task." />
 				) : (
 					<></>
 				)}
@@ -201,10 +189,11 @@ export function ReactApp(props: {
 						itemId={selectedItemId}
 						app={tree.root}
 					/>
-					<PromptPane
-						hidden={promptPaneHidden}
-						setHidden={setPromptPaneHidden}
-						view={view}
+					<TaskPane
+						hidden={taskPaneHidden}
+						setHidden={setTaskPaneHidden}
+						view={tree}
+						setRenderView={setRenderView}
 					/>
 				</div>
 			</div>
