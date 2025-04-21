@@ -4,10 +4,10 @@
 
 import {
 	type Presence,
-	StateFactory as latestStateFactory,
-	LatestEvents as LatestStateEvents,
-	StatesWorkspace as Workspace,
-	Latest as LatestState,
+	StateFactory,
+	LatestEvents,
+	StatesWorkspace,
+	Latest,
 	AttendeeId,
 	ClientConnectionId,
 	AttendeeStatus,
@@ -17,7 +17,7 @@ import { Listenable } from "fluid-framework";
 
 export function createUsersManager(props: {
 	presence: Presence;
-	workspace: Workspace<{}>;
+	workspace: StatesWorkspace<{}>;
 	name: string;
 	me: UserInfo;
 }): UsersManager {
@@ -25,18 +25,18 @@ export function createUsersManager(props: {
 
 	class UsersManagerImpl implements UsersManager {
 		initialState: UserInfo = me; // Default initial state for the user manager
-		state: LatestState<UserInfo>;
+		state: Latest<UserInfo>;
 
 		constructor(
 			name: string,
-			workspace: Workspace<{}>,
+			workspace: StatesWorkspace<{}>,
 			private presence: Presence,
 		) {
-			workspace.add(name, latestStateFactory.latest(this.initialState));
+			workspace.add(name, StateFactory.latest(this.initialState));
 			this.state = workspace.props[name];
 		}
 
-		public get events(): Listenable<LatestStateEvents<UserInfo>> {
+		public get events(): Listenable<LatestEvents<UserInfo>> {
 			return this.state.events;
 		}
 
@@ -50,7 +50,7 @@ export function createUsersManager(props: {
 			getMyself: () => {
 				return this.presence.attendees.getMyself();
 			},
-			events: this.presence.events,
+			events: this.presence.attendees.events,
 		};
 
 		getUsers(): readonly User[] {
