@@ -157,7 +157,7 @@ export function CommentButton(props: { item: Item }): JSX.Element {
 				userId: presence.users.getMyself().value.id,
 				username: presence.users.getMyself().value.name,
 				votes: new Vote({ votes: [] }),
-				createdAt: new DateTime({ raw: Date.now() }),
+				createdAt: new DateTime({ ms: Date.now() }),
 			});
 			item.comments.insertAtEnd(comment);
 		}
