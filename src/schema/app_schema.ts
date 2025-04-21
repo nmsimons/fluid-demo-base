@@ -13,22 +13,32 @@ import { TreeViewConfiguration, SchemaFactory, Tree } from "fluid-framework";
 const sf = new SchemaFactory("fc1db2e8-0a00-11ee-be56-0242ac120002");
 
 export class Shape extends sf.object("Shape", {
-	size: sf.number, // The size is a number that represents the width and height of the shape
-	color: sf.string, // The color is a string that represents the color of the shape
-	type: sf.string, // The shapeType is a string that represents the type of the shape
+	size: sf.required(sf.number, {
+		metadata: { description: "The width and height of the shape" },
+	}),
+	color: sf.required(sf.string, {
+		metadata: {
+			description: `The color of this shape, as a hexadecimal RGB string, e.g. "#00FF00" for bright green`,
+		},
+	}),
+	type: sf.required(sf.string, {
+		metadata: { description: `One of "circle", "square", "triangle", or "star"` },
+	}),
 }) {} // The size is a number that represents the size of the shape
 
 /**
  * A SharedTree object date-time
  */
 export class DateTime extends sf.object("DateTime", {
-	raw: sf.number,
+	ms: sf.required(sf.number, {
+		metadata: { description: "The number of milliseconds since the epoch" },
+	}),
 }) {
 	/**
 	 * Get the date-time
 	 */
 	get value(): Date {
-		return new Date(this.raw);
+		return new Date(this.ms);
 	}
 
 	/**
@@ -39,7 +49,7 @@ export class DateTime extends sf.object("DateTime", {
 		if (isNaN(value.getTime())) {
 			return;
 		}
-		this.raw = value.getTime();
+		this.ms = value.getTime();
 	}
 }
 
@@ -104,8 +114,16 @@ export class Vote extends sf.object("Vote", {
 export class Comment extends sf.object("Comment", {
 	id: sf.identifier,
 	text: sf.string,
-	userId: sf.string,
-	username: sf.string,
+	userId: sf.required(sf.string, {
+		metadata: {
+			description: `A unique user id for the author of the node, or "AI Agent" if created by an agent`,
+		},
+	}),
+	username: sf.required(sf.string, {
+		metadata: {
+			description: `A user-friendly name for the author of the node (e.g. "Alex Pardes"), or "AI Agent" if created by an agent`,
+		},
+	}),
 	votes: Vote,
 	createdAt: DateTime,
 }) {
@@ -124,7 +142,7 @@ export class Comments extends sf.array("Comments", [Comment]) {
 			userId,
 			username,
 			votes: new Vote({ votes: [] }),
-			createdAt: new DateTime({ raw: Date.now() }),
+			createdAt: new DateTime({ ms: Date.now() }),
 		});
 		this.insertAtEnd(comment);
 	}
@@ -137,15 +155,33 @@ export class Note extends sf.object(
 	{
 		id: sf.identifier,
 		text: sf.string,
-		author: sf.string,
+		author: sf.required(sf.string, {
+			metadata: {
+				description: `A unique user id for author of the node, or "AI Agent" if created by an agent`,
+			},
+		}),
 	},
 ) {}
 
 export class Item extends sf.object("Item", {
 	id: sf.identifier,
-	x: sf.number,
-	y: sf.number,
-	rotation: sf.number,
+	x: sf.required(sf.number, {
+		metadata: {
+			description:
+				"The x-coordinate of the shape on the canvas. The visible portion of the canvas width on a user's screen typically spans a few thousand pixels",
+		},
+	}),
+	y: sf.required(sf.number, {
+		metadata: {
+			description:
+				"The y-coordinate of the shape on the canvas. The visible portion of the canvas height on a user's screen typically spans a couple thousand pixels",
+		},
+	}),
+	rotation: sf.required(sf.number, {
+		metadata: {
+			description: "The rotation of the shape in clockwise degrees",
+		},
+	}),
 	comments: Comments,
 	votes: Vote,
 	content: [Shape, Note],
@@ -168,7 +204,8 @@ export class Group extends sf.object("Group", {
 	content: sf.array([Item]),
 }) {}
 
-export class Items extends sf.array("Items", [Item, Group]) {}
+// TODO: Support groups
+export class Items extends sf.array("Items", [Item]) {}
 
 export class App extends sf.object("App", {
 	items: Items,

@@ -4,9 +4,9 @@
  * Licensed under the MIT License.
  */
 
-import React, { JSX, useContext, useEffect, useState } from "react";
-import { Items, Item, Group } from "../schema/app_schema.js";
-import { IFluidContainer, Tree } from "fluid-framework";
+import React, { JSX, useContext, useEffect } from "react";
+import { Items, Item } from "../schema/app_schema.js";
+import { IFluidContainer } from "fluid-framework";
 import { PresenceContext } from "./PresenceContext.js";
 import { ItemView } from "./itemux.js";
 import { useTree } from "./useTree.js";

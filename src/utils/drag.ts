@@ -2,12 +2,12 @@
 // A function that creates a new DragManager instance
 
 import {
-	type IPresence as Presence,
-	Latest as latestStateFactory,
-	LatestValueManagerEvents as LatestStateEvents,
-	PresenceStates as Workspace,
-	LatestValueManager as LatestState,
-	ClientSessionId,
+	type Presence,
+	StateFactory as latestStateFactory,
+	LatestEvents as LatestStateEvents,
+	StatesWorkspace as Workspace,
+	Latest as LatestState,
+	AttendeeId,
 	ClientConnectionId,
 } from "@fluidframework/presence/alpha";
 import { Listenable } from "fluid-framework";
@@ -30,16 +30,19 @@ export function createDragManager(props: {
 			workspace: Workspace<{}>,
 			private presence: Presence,
 		) {
-			// @ts-expect-error - This is a known issue with the latestStateFactory type
-			workspace.add(name, latestStateFactory<DragAndRotatePackage | null>(this.initialState));
+			workspace.add(
+				name,
+				// TODO: NICK
+				latestStateFactory.latest<DragAndRotatePackage | null>(this.initialState),
+			);
 			this.state = workspace.props[name];
 		}
 
 		public clients = {
-			getAttendee: (clientId: ClientConnectionId | ClientSessionId) =>
-				this.presence.getAttendee(clientId),
-			getAttendees: () => this.presence.getAttendees(),
-			getMyself: () => this.presence.getMyself(),
+			getAttendee: (clientId: ClientConnectionId | AttendeeId) =>
+				this.presence.attendees.getAttendee(clientId),
+			getAttendees: () => this.presence.attendees.getAttendees(),
+			getMyself: () => this.presence.attendees.getMyself(),
 			events: this.presence.events,
 		};
 
