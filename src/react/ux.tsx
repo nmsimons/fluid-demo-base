@@ -10,7 +10,13 @@ import { ConnectionState, IFluidContainer } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
-import { NewShapeButton, ShowPaneButton, NewNoteButton, TooltipButton } from "./buttonux.js";
+import {
+	NewShapeButton,
+	ShowPaneButton,
+	NewNoteButton,
+	TooltipButton,
+	NewTableButton,
+} from "./appbuttonux.js";
 import {
 	Avatar,
 	AvatarGroup,
@@ -52,7 +58,7 @@ export function ReactApp(props: {
 	users: UsersManager;
 	container: IFluidContainer;
 	undoRedo: undoRedo;
-	drag: DragManager<DragAndRotatePackage>;
+	drag: DragManager<DragAndRotatePackage | null>;
 }): JSX.Element {
 	const { tree, selection, users, container, undoRedo, drag } = props;
 	const [connectionState, setConnectionState] = useState("");
@@ -139,6 +145,7 @@ export function ReactApp(props: {
 					<ToolbarGroup>
 						<NewShapeButton items={view.root.items} canvasSize={canvasSize} />
 						<NewNoteButton items={view.root.items} canvasSize={canvasSize} />
+						<NewTableButton items={view.root.items} canvasSize={canvasSize} />
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>

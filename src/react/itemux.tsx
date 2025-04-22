@@ -1,23 +1,36 @@
 import React, { JSX, useState, useEffect, useContext, useRef } from "react";
-import { Item, Note, Shape } from "../schema/app_schema.js";
+import { FluidTable, Item, Note, Shape } from "../schema/app_schema.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { ShapeView } from "./shapeux.js";
 import { Tree } from "fluid-framework";
 import { DragAndRotatePackage } from "../utils/drag.js";
-import { DeleteButton, VoteButton } from "./buttonux.js";
+import { DeleteButton, VoteButton } from "./appbuttonux.js";
 import { Toolbar, ToolbarGroup } from "@fluentui/react-components";
 import { NoteView } from "./noteux.js";
 import { useTree } from "./useTree.js";
 import { usePresenceManager } from "./usePresenceManger.js";
 import { PresenceManager } from "../utils/Interfaces/PresenceManager.js";
+import { TableView } from "./tableux.js";
+
+const getContentType = (item: Item): string => {
+	if (Tree.is(item.content, Shape)) {
+		return "shape";
+	} else if (Tree.is(item.content, Note)) {
+		return "note";
+	} else if (Tree.is(item.content, FluidTable)) {
+		return "table";
+	} else {
+		return "unknown";
+	}
+};
 
 const getContentElement = (item: Item): JSX.Element => {
-	useTree(item);
-
 	if (Tree.is(item.content, Shape)) {
 		return <ShapeView shape={item.content} />;
 	} else if (Tree.is(item.content, Note)) {
 		return <NoteView note={item.content} />;
+	} else if (Tree.is(item.content, FluidTable)) {
+		return <TableView fluidTable={item.content} />;
 	} else {
 		return <></>;
 	}
@@ -52,7 +65,8 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 			left: item.x,
 			top: item.y,
 			zIndex: index,
-			transform: `rotate(${item.rotation}deg)`,
+			transform:
+				getContentType(item) === "table" ? `rotate(0)` : `rotate(${item.rotation}deg)`,
 		});
 	}, [itemInval]);
 
@@ -62,7 +76,10 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 				left: dragData.x,
 				top: dragData.y,
 				zIndex: index,
-				transform: `rotate(${dragData.rotation}deg)`,
+				transform:
+					getContentType(item) === "table"
+						? `rotate(0)`
+						: `rotate(${dragData.rotation}deg)`,
 			});
 		}
 	};

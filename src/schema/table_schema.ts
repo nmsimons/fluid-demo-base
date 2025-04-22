@@ -28,15 +28,50 @@ export function Table<
 
 	const { sf, schemaTypes, columnProps, rowProps } = props;
 
-	type CellValueType = TreeNodeFromImplicitAllowedTypes<TCell>;
 	type CellInsertableType = InsertableTreeNodeFromImplicitAllowedTypes<TCell>;
+	type CellValueType = TreeNodeFromImplicitAllowedTypes<TCell>;
+
+	class Cell extends sf.object("Cell", {
+		columnId: sf.string,
+		value: sf.required(schemaTypes),
+	}) {
+		setValue(value: CellValueType): void {
+			this.value = value;
+		}
+
+		getValue(): CellValueType {
+			return this.value as CellValueType;
+		}
+
+		get column(): Column {
+			const parent = Tree.parent(this);
+			if (parent) {
+				const grandparent = Tree.parent(parent);
+				if (grandparent instanceof Table) {
+					return grandparent.getColumn(this.columnId);
+				}
+			}
+			throw new Error("Cell is not in a table");
+		}
+
+		get row(): Row {
+			const parent = Tree.parent(this);
+			if (parent) {
+				const grandparent = Tree.parent(parent);
+				if (grandparent instanceof Row) {
+					return grandparent;
+				}
+			}
+			throw new Error("Cell is not in a row");
+		}
+	}
 
 	/**
 	 * The Row schema - this is a map of Cells where the key is the column id
 	 */
 	class Row extends sf.object("Row", {
 		id: sf.identifier,
-		_cells: sf.map(schemaTypes), // The keys of this map are the column ids - this would ideally be private
+		_cells: sf.array(Cell),
 		props: rowProps ?? sf.null,
 	}) {
 		/**
@@ -67,7 +102,7 @@ export function Table<
 		 * @returns The cell if it exists, otherwise undefined
 		 */
 		getCell(column: Column): CellValueType | undefined {
-			return this._cells.get(column.id) as CellValueType | undefined;
+			return this._cells.find((cell) => cell.columnId === column.id)?.getValue();
 		}
 
 		/**
@@ -76,7 +111,20 @@ export function Table<
 		 * @param value The value to set
 		 */
 		setCell(column: Column, value: CellInsertableType | undefined): void {
-			this._cells.set(column.id, value);
+			const cell = this._cells.find((cell) => cell.columnId === column.id);
+			if (cell) {
+				cell.setValue(value as CellValueType);
+			} else {
+				if (value === undefined) {
+					this.deleteCell(column);
+					return;
+				}
+				const newCell = new Cell({
+					columnId: column.id,
+					value: value,
+				});
+				this._cells.insertAtEnd(newCell);
+			}
 		}
 
 		/**
@@ -84,8 +132,10 @@ export function Table<
 		 * @param column The column
 		 */
 		deleteCell(column: Column): void {
-			if (!this._cells.has(column.id)) return;
-			this._cells.delete(column.id);
+			const cell = this._cells.find((cell) => cell.columnId === column.id);
+			if (cell) {
+				this._cells.removeAt(this._cells.indexOf(cell));
+			}
 		}
 
 		/**

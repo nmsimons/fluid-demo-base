@@ -5,7 +5,7 @@ import { Pane } from "./paneux.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { App, Comment, Comments, Group, Item, Shape } from "../schema/app_schema.js";
 import { useTree } from "./useTree.js";
-import { VoteButton } from "./buttonux.js";
+import { VoteButton } from "./appbuttonux.js";
 import { SpeechBubble } from "./taskux.js";
 
 export function CommentPane(props: {

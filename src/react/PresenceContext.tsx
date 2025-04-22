@@ -8,9 +8,9 @@ import { TypedSelection } from "../utils/selection.js";
 export const PresenceContext = createContext<{
 	users: UsersManager;
 	selection: SelectionManager<TypedSelection>;
-	drag: DragManager<DragAndRotatePackage>;
+	drag: DragManager<DragAndRotatePackage | null>;
 }>({
 	users: {} as UsersManager,
 	selection: {} as SelectionManager<TypedSelection>,
-	drag: {} as DragManager<DragAndRotatePackage>,
+	drag: {} as DragManager<DragAndRotatePackage | null>,
 });
