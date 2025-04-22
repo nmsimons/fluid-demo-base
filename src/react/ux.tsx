@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import React, { JSX, useCallback, useContext, useEffect, useState } from "react";
+import React, { JSX, useContext, useEffect, useState } from "react";
 import { App } from "../schema/app_schema.js";
 import "../output.css";
 import { ConnectionState, IFluidContainer } from "fluid-framework";
@@ -107,11 +107,6 @@ export function ReactApp(props: {
 		return unsubscribe;
 	}, [view, selection]);
 
-	const setRenderView = useCallback(
-		(branch: TreeViewAlpha<typeof App>) => setView(branch),
-		[setView],
-	);
-
 	return (
 		<PresenceContext.Provider
 			value={{
@@ -126,6 +121,21 @@ export function ReactApp(props: {
 			>
 				<Header saved={saved} connectionState={connectionState} />
 				<Toolbar className="h-[48px] shadow-lg">
+					<ToolbarGroup>
+						<TooltipButton
+							tooltip="Undo"
+							onClick={() => undoRedo.undo()}
+							icon={<ArrowUndoFilled />}
+							disabled={!undoRedo.canUndo()}
+						/>
+						<TooltipButton
+							tooltip="Redo"
+							onClick={() => undoRedo.redo()}
+							icon={<ArrowRedoFilled />}
+							disabled={!undoRedo.canRedo()}
+						/>
+					</ToolbarGroup>
+					<ToolbarDivider />
 					<ToolbarGroup>
 						<NewShapeButton items={view.root.items} canvasSize={canvasSize} />
 						<NewNoteButton items={view.root.items} canvasSize={canvasSize} />
@@ -156,21 +166,6 @@ export function ReactApp(props: {
 							tooltip="AI Chat"
 						/>
 					</ToolbarGroup>
-					<ToolbarDivider />
-					<ToolbarGroup>
-						<TooltipButton
-							tooltip="Undo"
-							onClick={() => undoRedo.undo()}
-							icon={<ArrowUndoFilled />}
-							disabled={!undoRedo.canUndo()}
-						/>
-						<TooltipButton
-							tooltip="Redo"
-							onClick={() => undoRedo.redo()}
-							icon={<ArrowRedoFilled />}
-							disabled={!undoRedo.canRedo()}
-						/>
-					</ToolbarGroup>
 				</Toolbar>
 				{view !== tree ? (
 					<MessageBarComponent message="While viewing a Task, others will not see your changes (and you will not see theirs) until you complete the task." />
@@ -193,7 +188,7 @@ export function ReactApp(props: {
 						hidden={taskPaneHidden}
 						setHidden={setTaskPaneHidden}
 						view={tree}
-						setRenderView={setRenderView}
+						setRenderView={setView}
 					/>
 				</div>
 			</div>

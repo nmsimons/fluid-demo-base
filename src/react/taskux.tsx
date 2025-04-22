@@ -1,7 +1,7 @@
 // A pane for displaying and interacting with an LLM on the right side of the screen
 import { Button, Textarea } from "@fluentui/react-components";
 import { ArrowLeftFilled } from "@fluentui/react-icons";
-import React, { useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { Pane } from "./paneux.js";
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
 import { createFunctioningAgent, SharedTreeSemanticAgent } from "@fluidframework/tree-agent/alpha";
@@ -21,7 +21,6 @@ export function TaskPane(props: {
 
 	useEffect(() => {
 		if (hidden) {
-			setBranch(undefined);
 			setRenderView(view);
 		} else {
 			if (branch === undefined) {
@@ -31,6 +30,8 @@ export function TaskPane(props: {
 					return b;
 				});
 				setRenderView(b);
+			} else {
+				setRenderView(branch);
 			}
 		}
 	}, [view, hidden, branch, setRenderView]);
@@ -48,9 +49,9 @@ export function TaskPane(props: {
 
 	const handlePromptSubmit = async (prompt: string) => {
 		if (agent !== undefined) {
-			setChats([...chats, `You: ${prompt}`, `Agent: .`]);
+			setChats([...chats, `${prompt}`, `.`]);
 			const response = await agent.query(prompt);
-			setChats((prev) => [...prev.slice(0, -1), `Agent: ${response ?? "LLM query failed!"}`]);
+			setChats((prev) => [...prev.slice(0, -1), `${response ?? "LLM query failed!"}`]);
 		}
 	};
 
@@ -59,19 +60,19 @@ export function TaskPane(props: {
 		function updateDots() {
 			const dots = chats.at(-1);
 			switch (dots) {
-				case "Agent: ...":
+				case "...":
 					cancelDots = setTimeout(() => {
-						setChats((prev) => [...prev.slice(0, -1), "Agent: ."]);
+						setChats((prev) => [...prev.slice(0, -1), "."]);
 					}, 1000 / 3);
 					break;
-				case "Agent: .":
+				case ".":
 					cancelDots = setTimeout(() => {
-						setChats((prev) => [...prev.slice(0, -1), "Agent: .."]);
+						setChats((prev) => [...prev.slice(0, -1), ".."]);
 					}, 1000 / 3);
 					break;
-				case "Agent: ..":
+				case "..":
 					cancelDots = setTimeout(() => {
-						setChats((prev) => [...prev.slice(0, -1), "Agent: ..."]);
+						setChats((prev) => [...prev.slice(0, -1), "..."]);
 					}, 1000 / 3);
 					break;
 				default:
@@ -87,40 +88,63 @@ export function TaskPane(props: {
 	return (
 		<Pane hidden={hidden} setHidden={setHidden} title="Prompt">
 			<ChatLog chats={chats} />
+			<PromptCommitDiscardButtons
+				cancelCallback={() => {
+					if (branch !== undefined) {
+						setBranch(undefined);
+					}
+					setChats([]);
+					setHidden(true);
+					setRenderView(view);
+				}}
+				commitCallback={() => {
+					if (branch !== undefined) {
+						view.merge(branch, false);
+						branch.dispose();
+						setBranch(undefined);
+					}
+					setChats([]);
+					setHidden(true);
+					setRenderView(view);
+				}}
+				disabled={chats.length === 0}
+			/>
 			<PromptInput
 				callback={handlePromptSubmit}
-				disabled={
-					chats.at(-1) === "Agent: ." ||
-					chats.at(-1) === "Agent: .." ||
-					chats.at(-1) === "Agent: ..."
-				}
+				disabled={chats.at(-1) === "." || chats.at(-1) === ".." || chats.at(-1) === "..."}
 			/>
-			<div className="flex flex-row gap-x-2 w-full">
-				<Button
-					appearance="primary"
-					className="flex-grow h-8 text-white"
-					style={{ backgroundColor: "#4CAF50" }}
-					onClick={() => {
-						if (branch !== undefined) {
-							view.merge(branch, false);
-						}
-						setHidden(true);
-					}}
-				>
-					Complete
-				</Button>
-				<Button
-					appearance="primary"
-					className="flex-grow h-8 text-white"
-					style={{ backgroundColor: "#F02222" }}
-					onClick={() => {
-						setHidden(true);
-					}}
-				>
-					Discard
-				</Button>
-			</div>
 		</Pane>
+	);
+}
+
+export function PromptCommitDiscardButtons(props: {
+	cancelCallback: () => void;
+	commitCallback: () => void;
+	disabled?: boolean;
+}): JSX.Element {
+	const { cancelCallback, commitCallback } = props;
+	return (
+		<div className="flex flex-row gap-x-2 w-full">
+			<Button
+				appearance="primary"
+				className="flex-grow shrink-0 text-white"
+				onClick={() => {
+					commitCallback();
+				}}
+				disabled={props.disabled}
+			>
+				Complete
+			</Button>
+			<Button
+				className="flex-grow shrink-0 text-white"
+				onClick={() => {
+					cancelCallback();
+				}}
+				disabled={props.disabled}
+			>
+				Discard
+			</Button>
+		</div>
 	);
 }
 
@@ -134,7 +158,7 @@ export function PromptInput(props: {
 		<div className="flex flex-col justify-self-end gap-y-2">
 			<Textarea
 				className="flex"
-				rows={8}
+				rows={4}
 				value={prompt}
 				onChange={(e) => setPrompt(e.target.value)}
 				onKeyDown={(e) => {
@@ -161,20 +185,12 @@ export function PromptInput(props: {
 export function ChatLog(props: { chats: string[] }): JSX.Element {
 	const { chats } = props;
 	return (
-		<div className="flex flex-col gap-y-2 overflow-auto p-2">
+		<div className="flex flex-col grow space-y-2 overflow-y-auto">
 			{chats.map((message, idx) => {
 				const isUser = idx % 2 === 0;
 				return (
-					<div key={idx} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-						<div
-							className={`max-w-[80%] px-4 py-2 rounded-lg ${
-								isUser
-									? "bg-blue-500 text-black rounded-br-none"
-									: "bg-gray-200 text-black rounded-bl-none"
-							}`}
-						>
-							{message}
-						</div>
+					<div key={idx} className={`flex ${isUser ? "ml-6" : "mr-6"}`}>
+						<SpeechBubble isUser={isUser}>{message}</SpeechBubble>
 					</div>
 				);
 			})}
@@ -182,23 +198,18 @@ export function ChatLog(props: { chats: string[] }): JSX.Element {
 	);
 }
 
-export function PromptOutput(props: { response: string }): JSX.Element {
-	const { response } = props;
+export function SpeechBubble(props: { children: ReactNode; isUser: boolean }): JSX.Element {
+	const { children, isUser } = props;
 	return (
-		<textarea
-			rows={8}
-			readOnly
-			placeholder="Your response will appear here..."
-			value={response}
-			style={{
-				resize: "none",
-				backgroundColor: "white",
-				border: "1px solid #ccc",
-				padding: "8px",
-				borderRadius: "4px",
-				outline: "none",
-			}}
-		/>
+		<div
+			className={`w-full px-4 py-2 rounded-xl ${
+				isUser
+					? "bg-indigo-100 text-black rounded-br-none"
+					: "bg-white text-black rounded-bl-none"
+			}`}
+		>
+			{children}
+		</div>
 	);
 }
 

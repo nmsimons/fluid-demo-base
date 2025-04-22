@@ -6,6 +6,7 @@ import { PresenceContext } from "./PresenceContext.js";
 import { App, Comment, Comments, Group, Item, Shape } from "../schema/app_schema.js";
 import { useTree } from "./useTree.js";
 import { VoteButton } from "./buttonux.js";
+import { SpeechBubble } from "./taskux.js";
 
 export function CommentPane(props: {
 	hidden: boolean;
@@ -81,7 +82,7 @@ export function CommentView(props: { comment: Comment }): JSX.Element {
 					})}
 				</div>
 			</div>
-			<div className={`p-2 border rounded ${isMyComment ? "bg-indigo-100" : "bg-white"}`}>
+			<SpeechBubble isUser={isMyComment}>
 				<div className="">{comment.text}</div>
 				<div className="flex items-center justify-between">
 					<div className="text-xs text-gray-500">{comment.votes.votes.length} votes</div>
@@ -89,7 +90,7 @@ export function CommentView(props: { comment: Comment }): JSX.Element {
 						<VoteButton vote={comment.votes} />
 					</div>
 				</div>
-			</div>
+			</SpeechBubble>
 		</div>
 	);
 }
