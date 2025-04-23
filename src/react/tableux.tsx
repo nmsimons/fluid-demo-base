@@ -22,6 +22,7 @@ import {
 	FluidRow,
 	FluidColumn,
 	typeDefinition,
+	hintValues,
 } from "../schema/app_schema.js";
 import { IMember, Tree, TreeStatus } from "fluid-framework";
 import { useVirtualizer, VirtualItem, Virtualizer } from "@tanstack/react-virtual";
@@ -540,7 +541,7 @@ const updateColumnData = (columnsArray: FluidColumn[]) => {
 	columnsArray.forEach((column) => {
 		const sortingConfig = getSortingConfig(column);
 		headerArray.push(
-			columnHelper.accessor((row) => row.cells[column.id], {
+			columnHelper.accessor((row) => row.getCells()[column.id], {
 				id: column.id,
 				header: column.name,
 				sortingFn: sortingConfig.fn,
@@ -617,15 +618,15 @@ const voteSortingFn: SortingFn<FluidRow> = (
 const getSortingConfig = (
 	column: FluidColumn,
 ): { fn: SortingFnOption<FluidRow> | undefined; desc: boolean } => {
-	if (column.hint === "boolean") {
+	if (column.hint === hintValues.boolean) {
 		return { fn: "basic", desc: false };
-	} else if (column.hint === "number") {
+	} else if (column.hint === hintValues.number) {
 		return { fn: "alphanumeric", desc: true };
-	} else if (column.hint === "string") {
+	} else if (column.hint === hintValues.string) {
 		return { fn: "alphanumeric", desc: false };
-	} else if (column.hint === "date") {
+	} else if (column.hint === hintValues.date) {
 		return { fn: dateSortingFn, desc: false };
-	} else if (column.hint === "vote") {
+	} else if (column.hint === hintValues.vote) {
 		return { fn: voteSortingFn, desc: true };
 	} else {
 		console.error("Unknown column type", "Hint:", column.hint);

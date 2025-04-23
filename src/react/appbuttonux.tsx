@@ -137,7 +137,7 @@ export function NewTableButton(props: {
 
 		// Create an array of rows to be used in the table
 		const rows = new Array(10).fill(null).map(() => {
-			return { _cells: [], props: null };
+			return { cells: [] };
 		});
 
 		// Initialize the SharedTree DDSes
@@ -147,27 +147,22 @@ export function NewTableButton(props: {
 				{
 					name: "String",
 					hint: hintValues.string,
-					props: null,
 				},
 				{
 					name: "Number",
 					hint: hintValues.number,
-					props: null,
 				},
 				{
 					name: "Boolean",
 					hint: hintValues.boolean,
-					props: null,
 				},
 				{
 					name: "Date",
 					hint: hintValues.date,
-					props: null,
 				},
 				{
 					name: "Vote",
 					hint: hintValues.vote,
-					props: null,
 				},
 			],
 		});

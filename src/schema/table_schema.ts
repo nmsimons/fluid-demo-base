@@ -6,34 +6,35 @@ import {
 	TreeNodeSchema,
 	TreeArrayNode,
 } from "fluid-framework";
+import { hintValues } from "./app_schema.js";
 
 // Schema is defined using a factory object that generates classes for objects as well
 // as list and map nodes.
 
 export function Table<
 	TCell extends readonly TreeNodeSchema[],
-	TColumnProps extends readonly TreeNodeSchema[],
-	TRowProps extends readonly TreeNodeSchema[],
 	Scope extends string | undefined,
->(props: {
-	sf: SchemaFactory<Scope>;
-	schemaTypes: TCell;
-	columnProps?: TColumnProps;
-	rowProps?: TRowProps;
-}) {
+>(props: { sf: SchemaFactory<Scope>; schemaTypes: TCell }) {
 	// Create a new table based on the SharedTree schema in this file
 	// The table will be empty and will have no columns
 	// The types allowed in the table are defined in the schemaTypes array
 	// The table will be initialized with the types allowed in the table
 
-	const { sf, schemaTypes, columnProps, rowProps } = props;
+	const { sf, schemaTypes } = props;
 
 	type CellInsertableType = InsertableTreeNodeFromImplicitAllowedTypes<TCell>;
 	type CellValueType = TreeNodeFromImplicitAllowedTypes<TCell>;
 
 	class Cell extends sf.object("Cell", {
-		columnId: sf.string,
-		value: sf.required(schemaTypes),
+		columnId: sf.required(sf.string, {
+			metadata: { description: "The id of the column in which this cell resides." },
+		}),
+		value: sf.required(schemaTypes, {
+			metadata: {
+				description:
+					"The content of the cell. Must match the type of the column in the hint property.",
+			},
+		}),
 	}) {
 		setValue(value: CellValueType): void {
 			this.value = value;
@@ -71,8 +72,7 @@ export function Table<
 	 */
 	class Row extends sf.object("Row", {
 		id: sf.identifier,
-		_cells: sf.array(Cell),
-		props: rowProps ?? sf.null,
+		cells: sf.array(Cell),
 	}) {
 		/**
 		 * Property getter to get the cells in the row
@@ -80,7 +80,7 @@ export function Table<
 		 * and the values are the cell values - includes the default value of the column if the cell is undefined
 		 * This is used to get the cells in the row for the table view
 		 */
-		get cells(): Record<string, CellValueType | undefined> {
+		getCells(): Record<string, CellValueType | undefined> {
 			const cells: Record<string, CellValueType | undefined> = {};
 			// Iterate over the columns in the table and get the cell values
 			for (const column of this.table.columns) {
@@ -102,7 +102,7 @@ export function Table<
 		 * @returns The cell if it exists, otherwise undefined
 		 */
 		getCell(column: Column): CellValueType | undefined {
-			return this._cells.find((cell) => cell.columnId === column.id)?.getValue();
+			return this.cells.find((cell) => cell.columnId === column.id)?.getValue();
 		}
 
 		/**
@@ -111,7 +111,7 @@ export function Table<
 		 * @param value The value to set
 		 */
 		setCell(column: Column, value: CellInsertableType | undefined): void {
-			const cell = this._cells.find((cell) => cell.columnId === column.id);
+			const cell = this.cells.find((cell) => cell.columnId === column.id);
 			if (cell) {
 				cell.setValue(value as CellValueType);
 			} else {
@@ -123,7 +123,7 @@ export function Table<
 					columnId: column.id,
 					value: value,
 				});
-				this._cells.insertAtEnd(newCell);
+				this.cells.insertAtEnd(newCell);
 			}
 		}
 
@@ -132,9 +132,9 @@ export function Table<
 		 * @param column The column
 		 */
 		deleteCell(column: Column): void {
-			const cell = this._cells.find((cell) => cell.columnId === column.id);
+			const cell = this.cells.find((cell) => cell.columnId === column.id);
 			if (cell) {
-				this._cells.removeAt(this._cells.indexOf(cell));
+				this.cells.removeAt(this.cells.indexOf(cell));
 			}
 		}
 
@@ -209,8 +209,11 @@ export function Table<
 	class Column extends sf.object("Column", {
 		id: sf.identifier,
 		name: sf.string,
-		hint: sf.optional(sf.string),
-		props: columnProps ?? sf.null,
+		hint: sf.optional(sf.string, {
+			metadata: {
+				description: `The type of the items in this column. Must be one of ${Object.values(hintValues).join(", ")}.`,
+			},
+		}),
 	}) {
 		/**
 		 * Get the parent Table
@@ -383,15 +386,9 @@ export function Table<
 		 * @param index The index to insert the column at
 		 * @param name The name of the column
 		 */
-		insertColumn(props: {
-			index: number;
-			name: string;
-			hint?: string;
-			props: TColumnProps | null;
-		}): Column {
-			const { index, name, hint, props: columnProps } = props;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const column = new Column({ name, hint, props: columnProps } as any);
+		insertColumn(props: { index: number; name: string; hint?: string }): Column {
+			const { index, name, hint } = props;
+			const column = new Column({ name, hint });
 			this.columns.insertAt(index, column);
 			return column;
 		}

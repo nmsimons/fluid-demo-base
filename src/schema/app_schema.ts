@@ -13,6 +13,15 @@ import {
 	TreeStatus,
 } from "fluid-framework";
 
+export type HintValues = (typeof hintValues)[keyof typeof hintValues];
+export const hintValues = {
+	string: "string",
+	number: "number",
+	boolean: "boolean",
+	date: "DateTime",
+	vote: "Vote",
+} as const;
+
 // Schema is defined using a factory object that generates classes for objects as well
 // as list and map nodes.
 
@@ -37,7 +46,7 @@ export class Shape extends sf.object("Shape", {
 /**
  * A SharedTree object date-time
  */
-export class DateTime extends sf.object("DateTime", {
+export class DateTime extends sf.object(hintValues.date, {
 	ms: sf.required(sf.number, {
 		metadata: { description: "The number of milliseconds since the epoch" },
 	}),
@@ -64,7 +73,7 @@ export class DateTime extends sf.object("DateTime", {
 /**
  * A SharedTree object that allows users to vote
  */
-export class Vote extends sf.object("Vote", {
+export class Vote extends sf.object(hintValues.vote, {
 	votes: sf.array(sf.string), // Map of votes
 }) {
 	/**
@@ -196,7 +205,7 @@ export class FluidTable extends Table({
 	 * Create a Row before inserting it into the table
 	 * */
 	createDetachedRow(): FluidRow {
-		return new FluidTable.Row({ _cells: [], props: null });
+		return new FluidTable.Row({ cells: [] });
 	}
 
 	/**
@@ -264,15 +273,6 @@ export class App extends sf.object("App", {
 
 export type FluidRow = NodeFromSchema<typeof FluidTable.Row>;
 export type FluidColumn = NodeFromSchema<typeof FluidTable.Column>;
-
-export type HintValues = (typeof hintValues)[keyof typeof hintValues];
-export const hintValues = {
-	string: "string",
-	number: "number",
-	boolean: "boolean",
-	date: "date",
-	vote: "vote",
-} as const;
 
 /**
  * Export the tree config appropriate for this schema.
