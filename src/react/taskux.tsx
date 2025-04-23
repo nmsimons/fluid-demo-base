@@ -1,7 +1,7 @@
 // A pane for displaying and interacting with an LLM on the right side of the screen
 import { Button, Textarea } from "@fluentui/react-components";
 import { ArrowLeftFilled } from "@fluentui/react-icons";
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState, useRef } from "react";
 import { Pane } from "./paneux.js";
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
 import { createFunctioningAgent, SharedTreeSemanticAgent } from "@fluidframework/tree-agent/alpha";
@@ -165,6 +165,7 @@ export function PromptInput(props: {
 					if (e.key === "Enter") {
 						e.preventDefault();
 						callback(prompt);
+						setPrompt("");
 					}
 				}}
 				placeholder="Type your prompt here..."
@@ -173,6 +174,7 @@ export function PromptInput(props: {
 				appearance="primary"
 				onClick={() => {
 					callback(prompt);
+					setPrompt("");
 				}}
 				disabled={props.disabled}
 			>
@@ -184,8 +186,18 @@ export function PromptInput(props: {
 
 export function ChatLog(props: { chats: string[] }): JSX.Element {
 	const { chats } = props;
+	const containerRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const el = containerRef.current;
+		if (el) {
+			// scroll to bottom whenever chats changes
+			el.scrollTop = el.scrollHeight;
+		}
+	}, [chats]);
+
 	return (
-		<div className="flex flex-col grow space-y-2 overflow-y-auto">
+		<div ref={containerRef} className="flex flex-col grow space-y-2 overflow-y-auto">
 			{chats.map((message, idx) => {
 				const isUser = idx % 2 === 0;
 				return (
