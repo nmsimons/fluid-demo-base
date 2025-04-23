@@ -3,9 +3,13 @@ import { DateTime, Vote, FluidRow, FluidColumn } from "../schema/app_schema.js";
 import { Tree, TreeStatus } from "fluid-framework";
 import { ThumbLikeFilled, ThumbLikeRegular } from "@fluentui/react-icons";
 import { ToolbarButton } from "@fluentui/react-components";
+import { useTree } from "./useTree.js";
 
 export function ColumnInput(props: { column: FluidColumn }): JSX.Element {
 	const { column } = props;
+
+	useTree(column);
+
 	return (
 		<input
 			id={column.id}
@@ -26,6 +30,9 @@ export function CellInputBoolean(props: {
 	cellId: string;
 }): JSX.Element {
 	const { value, row, column, cellId } = props;
+
+	useTree(row);
+	useTree(column);
 
 	// handle a change event in the cell
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +62,9 @@ export function CellInputString(props: {
 }): JSX.Element {
 	const { value, row, column, cellId } = props;
 
+	useTree(row);
+	useTree(column);
+
 	// handle a change event in the cell
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		row.setCell(column, e.target.value);
@@ -79,6 +89,9 @@ export function CellInputNumber(props: {
 	cellId: string;
 }): JSX.Element {
 	const { value, row, column, cellId } = props;
+
+	useTree(row);
+	useTree(column);
 
 	// handle a change event in the cell
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,6 +121,9 @@ export function CellInputDate(props: {
 	cellId: string;
 }): JSX.Element {
 	const { value, row, column, cellId } = props;
+
+	useTree(row);
+	useTree(column);
 
 	const date = value?.value?.toISOString().split("T")[0] ?? "";
 
@@ -155,6 +171,9 @@ export function CellInputVote(props: {
 	userId: string;
 }): JSX.Element {
 	const { value, row, column, userId } = props;
+
+	useTree(row);
+	useTree(column);
 
 	// Get the value of the cell
 	const vote = value ?? new Vote({ votes: [] });
