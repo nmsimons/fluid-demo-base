@@ -43,6 +43,8 @@ import {
 	ColumnInput,
 } from "./inputux.js";
 import { PresenceContext } from "./PresenceContext.js";
+import { useTree } from "./useTree.js";
+import { usePresenceManager } from "./usePresenceManger.js";
 
 const leftColumnWidth = "20px"; // Width of the index column
 const columnWidth = "200px"; // Width of the data columns
@@ -57,6 +59,8 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 	const [columns, setColumns] = useState<ColumnDef<FluidRow, cellValue>[]>(
 		updateColumnData(fluidTable.columns.map((column) => column)),
 	);
+
+	useTree(fluidTable);
 
 	// Register for tree deltas when the component mounts. Any time the rows change, the app will update.
 	useEffect(() => {
@@ -108,6 +112,8 @@ export function TableHeadersView(props: {
 }): JSX.Element {
 	const { table, fluidTable } = props;
 
+	useTree(fluidTable);
+
 	return (
 		<thead
 			style={{
@@ -154,21 +160,10 @@ export function TableHeaderView(props: {
 }): JSX.Element {
 	const { header, fluidTable } = props;
 	const fluidColumn = fluidTable.getColumn(header.column.id);
-	const [, setInval] = useState(0); // used to force a re-render of the header
+
+	useTree(fluidColumn);
 
 	const selection = useContext(PresenceContext).selection; // Get the selection manager from context
-
-	useEffect(() => {
-		const unsubscribe = Tree.on(fluidColumn, "nodeChanged", () => {
-			// Trigger a re-render of the header
-			// This is necessary because the header is not re-rendered when the data changes
-			// because the header is not a React component
-			// set inval to a random number to force a re-render
-			// This is a hacky way to do it, but it works
-			setInval(Math.random());
-		});
-		return unsubscribe;
-	}, []); // Only run this effect once when the component mounts
 
 	// handle a focus event in the header
 	const handleFocus = () => {
@@ -186,6 +181,9 @@ export function TableHeaderView(props: {
 			}}
 			className="relative p-1 border-r-1 border-gray-100"
 			onFocus={handleFocus}
+			onClick={(e) => {
+				e.stopPropagation();
+			}}
 		>
 			<PresenceIndicator item={header} type="column" /> {/* Local selection box */}
 			<PresenceIndicator item={header} type="column" /> {/* Remote selection box */}
@@ -289,23 +287,13 @@ export function TableRowView(props: {
 	rowVirtualizer: Virtualizer<HTMLDivElement, HTMLTableRowElement>;
 }): JSX.Element {
 	const { row, virtualRow, rowVirtualizer } = props;
-	const [, setInval] = useState(0); // used to force a re-render of the row
 
 	const style = { transform: `translateY(${virtualRow.start}px)` };
 
 	// Get the fluid row from the row
 	const fluidRow = row.original;
-	useEffect(() => {
-		const unsubscribe = Tree.on(fluidRow, "treeChanged", () => {
-			// Trigger a re-render of the row
-			// This is necessary because the row is not re-rendered when the data changes
-			// because the row is not a React component
-			// set inval to a random number to force a re-render
-			// This is a hacky way to do it, but it works
-			setInval(Math.random());
-		});
-		return unsubscribe;
-	}, []); // Only run this effect once when the component mounts
+
+	useTree(fluidRow);
 
 	return (
 		<tr
@@ -347,6 +335,7 @@ export function IndexCellView(props: { rowId: string }): JSX.Element {
 
 	// handle a click event in the cell
 	const handleClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
 		if (e.ctrlKey) {
 			selection.toggleSelection({ id: rowId, type: "row" });
 		} else {
@@ -386,13 +375,17 @@ export function TableCellView(props: { cell: Cell<FluidRow, cellValue> }): JSX.E
 	const selection = useContext(PresenceContext).selection; // Get the selection manager from context
 
 	// handle a click event in the cell
-	const handleFocus = () => {
+	const handleFocus = (e: React.FocusEvent) => {
+		e.stopPropagation();
 		selection.setSelection({ id: cell.id, type: "cell" });
 	};
 
 	return (
 		<td
-			onFocus={handleFocus}
+			onClick={(e) => {
+				e.stopPropagation();
+			}}
+			onFocus={(e) => handleFocus(e)}
 			style={{
 				display: "flex",
 				position: "relative",
@@ -413,19 +406,8 @@ export function TableCellViewContent(props: { cell: Cell<FluidRow, cellValue> })
 	const fluidRow = cell.row.original;
 	const fluidColumn = fluidRow.table.getColumn(cell.column.id);
 	const value = fluidRow.getCell(fluidColumn);
-	const [, setInval] = useState(0); // used to force a re-render of the cell
-
+	useTree(fluidRow);
 	const users = useContext(PresenceContext).users;
-
-	useEffect(() => {
-		const unsubscribe = Tree.on(fluidColumn, "nodeChanged", () => {
-			// Trigger a re-render of the cell
-			if (fluidRow.getCell(fluidColumn) === undefined) {
-				setInval(Math.random());
-			}
-		});
-		return unsubscribe;
-	}, []); // Only run this effect once when the component mounts
 
 	// Switch on the hint of the column to determine the type of input to display
 	switch (fluidColumn.hint) {
@@ -501,26 +483,18 @@ export function PresenceIndicator(props: {
 		selection.testRemoteSelection(selectedItem),
 	);
 
-	useEffect(() => {
-		const unsubscribe = selection.events.on("localUpdated", () => {
+	usePresenceManager(
+		selection,
+		() => {
+			setRemoteSelected(selection.testRemoteSelection(selectedItem));
+		},
+		() => {
 			setSelected(selection.testSelection(selectedItem));
-		});
-		return unsubscribe;
-	}, []);
-
-	useEffect(() => {
-		const unsubscribe = selection.events.on("remoteUpdated", () => {
+		},
+		() => {
 			setRemoteSelected(selection.testRemoteSelection(selectedItem));
-		});
-		return unsubscribe;
-	}, []);
-
-	useEffect(() => {
-		const unsubscribe = selection.clients.events.on("attendeeDisconnected", () => {
-			setRemoteSelected(selection.testRemoteSelection(selectedItem));
-		});
-		return unsubscribe;
-	}, []);
+		},
+	);
 
 	const isRow = type === "row";
 
