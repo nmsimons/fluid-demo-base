@@ -40,6 +40,7 @@ import {
 	ToolbarButton,
 	Tooltip,
 } from "@fluentui/react-components";
+import { useTree } from "./useTree.js";
 
 const getLastSelectedRow = (
 	table: FluidTable,
@@ -68,6 +69,8 @@ export function NewEmptyRowButton(props: {
 }): JSX.Element {
 	const { table, selection } = props;
 
+	useTree(table);
+
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		const lastSelectedRow = getLastSelectedRow(table, selection);
@@ -91,13 +94,16 @@ export function NewRowButton(props: {
 	table: FluidTable;
 	selection: SelectionManager<TypedSelection>;
 }): JSX.Element {
+	const { table, selection } = props;
+	useTree(table);
+
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		// Wrap the add group operation in a transaction as it adds a group and potentially moves
 		// multiple notes into the group and we want to ensure that the operation is atomic.
 		// This ensures that the revertible of the operation will undo all the changes made by the operation.
-		Tree.runTransaction(props.table, () => {
-			const lastSelectedRow = getLastSelectedRow(props.table, props.selection);
+		Tree.runTransaction(table, () => {
+			const lastSelectedRow = getLastSelectedRow(table, selection);
 			const row = getRowWithValues(props.table);
 
 			if (lastSelectedRow !== undefined) {
@@ -117,12 +123,15 @@ export function NewRowButton(props: {
 }
 
 export function NewManysRowsButton(props: { table: FluidTable }): JSX.Element {
+	const { table } = props;
+	useTree(table);
+
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		// Wrap the add group operation in a transaction as it adds a group and potentially moves
 		// multiple notes into the group and we want to ensure that the operation is atomic.
 		// This ensures that the revertible of the operation will undo all the changes made by the operation.
-		Tree.runTransaction(props.table, () => {
+		Tree.runTransaction(table, () => {
 			// Add a thousand rows at a time
 			const rows = [];
 			for (let i = 0; i < 1000; i++) {
@@ -190,6 +199,8 @@ function getRandomDate(start: Date, end: Date): Date {
 export function NewColumnButton(props: { table: FluidTable }): JSX.Element {
 	const { table } = props;
 
+	useTree(table);
+
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 
@@ -249,6 +260,9 @@ export function MoveSelectedRowsButton(props: {
 	up: boolean;
 }): JSX.Element {
 	const { table, selection, up } = props;
+
+	useTree(table);
+
 	// Disable the button if there are no selected rows
 	const [disabled, setDisabled] = React.useState(getSelected(selection, "row").length === 0);
 	useEffect(() => {
@@ -303,6 +317,9 @@ export function MoveSelectedColumnsButton(props: {
 	left: boolean;
 }): JSX.Element {
 	const { table, selection, left } = props;
+
+	useTree(table);
+
 	// Disable the button if there are no selected columns
 	// and no selected cells in the table
 	const [disabled, setDisabled] = React.useState(
@@ -374,6 +391,8 @@ export function DeleteSelectedRowsButton(props: {
 }): JSX.Element {
 	const { table, selection } = props;
 
+	useTree(table);
+
 	// Disable the button if there are no selected rows
 	const [disabled, setDisabled] = React.useState(getSelected(selection, "row").length === 0);
 
@@ -423,6 +442,8 @@ export function DeleteSelectedRowsButton(props: {
 export function ColumnTypeDropdown(props: { column: FluidColumn }): JSX.Element {
 	const { column } = props;
 
+	useTree(column);
+
 	const [checkedValues, setCheckedValues] = React.useState<Record<string, string[]>>({
 		type: [column.hint ?? ""],
 	});
@@ -464,6 +485,8 @@ export function ChangeColumnTypeMenuItem(props: {
 }): JSX.Element {
 	const { column, type } = props;
 
+	useTree(column);
+
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		switch (type) {
@@ -497,6 +520,9 @@ export function ChangeColumnTypeMenuItem(props: {
 
 // Delete all the rows in the table
 export function DeleteAllRowsButton(props: { table: FluidTable }): JSX.Element {
+	const { table } = props;
+	useTree(table);
+
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		props.table.deleteAllRows();
