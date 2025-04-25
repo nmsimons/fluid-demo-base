@@ -4,19 +4,14 @@
  */
 
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { App } from "../schema/app_schema.js";
+import { App, Shape } from "../schema/app_schema.js";
 import "../output.css";
 import { ConnectionState, IFluidContainer } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
-import {
-	NewShapeButton,
-	ShowPaneButton,
-	NewNoteButton,
-	TooltipButton,
-	NewTableButton,
-} from "./appbuttonux.js";
+import { NewShapeButton, ShowPaneButton, NewNoteButton, NewTableButton } from "./appbuttonux.js";
+import { TooltipButton } from "./buttonux.js";
 import {
 	Avatar,
 	AvatarGroup,
@@ -44,9 +39,13 @@ import {
 	ArrowUndoFilled,
 	BotFilled,
 	BotRegular,
+	BranchFilled,
+	BranchRegular,
+	ColorFilled,
 	CommentFilled,
 	CommentRegular,
 	DeleteRegular,
+	MergeRegular,
 } from "@fluentui/react-icons";
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
 import { useTree } from "./useTree.js";
@@ -100,6 +99,10 @@ export function ReactApp(props: {
 	}, []);
 
 	useEffect(() => {
+		console.log("View Changed");
+	}, [view]);
+
+	useEffect(() => {
 		const unsubscribe = selection.events.on("localUpdated", () => {
 			const itemId =
 				selection.getLocalSelection().length !== 0
@@ -119,6 +122,7 @@ export function ReactApp(props: {
 				users: users,
 				selection: selection,
 				drag: drag,
+				branch: view !== tree,
 			}}
 		>
 			<div
@@ -146,6 +150,19 @@ export function ReactApp(props: {
 						<NewShapeButton items={view.root.items} canvasSize={canvasSize} />
 						<NewNoteButton items={view.root.items} canvasSize={canvasSize} />
 						<NewTableButton items={view.root.items} canvasSize={canvasSize} />
+						<TooltipButton
+							tooltip="Make the selected shape red"
+							onClick={() => {
+								const selectedItem = view.root.items.find(
+									(item) => item.id === selectedItemId,
+								);
+								if (selectedItem?.content instanceof Shape) {
+									selectedItem.content.color = "red";
+								}
+							}}
+							icon={<ColorFilled />}
+							disabled={selectedItemId === ""}
+						/>
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
@@ -173,6 +190,21 @@ export function ReactApp(props: {
 							tooltip="AI Chat"
 						/>
 					</ToolbarGroup>
+					<ToolbarDivider />
+					<ToolbarGroup>
+						<TooltipButton
+							tooltip="Create Branch"
+							onClick={() => createBranch(tree, view, setView)}
+							icon={tree !== view ? <BranchFilled /> : <BranchRegular />}
+							disabled={view !== tree}
+						/>
+						<TooltipButton
+							tooltip="Merge Branch"
+							onClick={() => mergeBranch(tree, view, setView)}
+							icon={<MergeRegular />}
+							disabled={view === tree}
+						/>
+					</ToolbarGroup>
 				</Toolbar>
 				{view !== tree ? (
 					<MessageBarComponent message="While viewing a Task, others will not see your changes (and you will not see theirs) until you complete the task." />
@@ -194,7 +226,7 @@ export function ReactApp(props: {
 					<TaskPane
 						hidden={taskPaneHidden}
 						setHidden={setTaskPaneHidden}
-						view={tree}
+						main={tree}
 						setRenderView={setView}
 					/>
 				</div>

@@ -69,4 +69,5 @@ export type DragAndRotatePackage = {
 	x: number;
 	y: number;
 	rotation: number;
+	branch: boolean;
 };

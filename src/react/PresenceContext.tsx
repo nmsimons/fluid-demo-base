@@ -9,8 +9,10 @@ export const PresenceContext = createContext<{
 	users: UsersManager;
 	selection: SelectionManager<TypedSelection>;
 	drag: DragManager<DragAndRotatePackage | null>;
+	branch: boolean;
 }>({
 	users: {} as UsersManager,
 	selection: {} as SelectionManager<TypedSelection>,
 	drag: {} as DragManager<DragAndRotatePackage | null>,
+	branch: false,
 });
