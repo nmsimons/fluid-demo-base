@@ -69,7 +69,7 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 			setData(fluidTable.rows.map((row) => row));
 		});
 		return unsubscribe;
-	}, [fluidTable.rows]);
+	}, [fluidTable, fluidTable.rows]);
 
 	// Register for tree deltas when the component mounts. Any time the columns change, the app will update.
 	useEffect(() => {
@@ -77,7 +77,7 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 			setColumns(updateColumnData(fluidTable.columns.map((column) => column)));
 		});
 		return unsubscribe;
-	}, [fluidTable.columns]);
+	}, [fluidTable, fluidTable.columns]);
 
 	// The virtualizer will need a reference to the scrollable container element
 	const tableContainerRef = React.useRef<HTMLDivElement>(null);
@@ -407,7 +407,8 @@ export function TableCellViewContent(props: { cell: Cell<FluidRow, cellValue> })
 	const fluidRow = cell.row.original;
 	const fluidColumn = fluidRow.table.getColumn(cell.column.id);
 	const value = fluidRow.getCell(fluidColumn);
-	useTree(fluidRow);
+	useTree(fluidRow, true);
+	useTree(fluidColumn);
 	const users = useContext(PresenceContext).users;
 
 	// Switch on the hint of the column to determine the type of input to display

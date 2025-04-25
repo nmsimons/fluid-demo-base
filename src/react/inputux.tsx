@@ -31,8 +31,10 @@ export function CellInputBoolean(props: {
 }): JSX.Element {
 	const { value, row, column, cellId } = props;
 
-	useTree(row);
+	useTree(row, true);
 	useTree(column);
+
+	// Check if the cell is still in the row
 
 	// handle a change event in the cell
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +64,7 @@ export function CellInputString(props: {
 }): JSX.Element {
 	const { value, row, column, cellId } = props;
 
-	useTree(row);
+	useTree(row, true);
 	useTree(column);
 
 	// handle a change event in the cell
@@ -90,7 +92,7 @@ export function CellInputNumber(props: {
 }): JSX.Element {
 	const { value, row, column, cellId } = props;
 
-	useTree(row);
+	useTree(row, true);
 	useTree(column);
 
 	// handle a change event in the cell
@@ -122,7 +124,7 @@ export function CellInputDate(props: {
 }): JSX.Element {
 	const { value, row, column, cellId } = props;
 
-	useTree(row);
+	useTree(row, true);
 	useTree(column);
 
 	const date = value?.value?.toISOString().split("T")[0] ?? "";
@@ -172,7 +174,7 @@ export function CellInputVote(props: {
 }): JSX.Element {
 	const { value, row, column, userId } = props;
 
-	useTree(row);
+	useTree(row, true);
 	useTree(column);
 
 	// Get the value of the cell
