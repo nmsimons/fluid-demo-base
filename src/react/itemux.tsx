@@ -283,7 +283,7 @@ export function SelectionControls(props: { item: Item; padding: number }): JSX.E
 
 export function ItemToolbar(props: { item: Item }): JSX.Element {
 	const { item } = props;
-	useTree(item);
+	useTree(item, true);
 	return (
 		<Toolbar
 			size="small"
