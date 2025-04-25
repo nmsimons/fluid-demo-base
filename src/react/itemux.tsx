@@ -25,6 +25,7 @@ const getContentType = (item: Item): string => {
 };
 
 const getContentElement = (item: Item): JSX.Element => {
+	useTree(item);
 	if (Tree.is(item.content, Shape)) {
 		return <ShapeView shape={item.content} />;
 	} else if (Tree.is(item.content, Note)) {
@@ -68,7 +69,7 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 			transform:
 				getContentType(item) === "table" ? `rotate(0)` : `rotate(${item.rotation}deg)`,
 		});
-	}, [itemInval]);
+	}, [itemInval, item]);
 
 	const setPropsOnDrag = (dragData: DragAndRotatePackage) => {
 		if (dragData && dragData.id === item.id) {
@@ -84,7 +85,15 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 		}
 	};
 
-	usePresenceManager(presence.drag as PresenceManager<DragAndRotatePackage>, setPropsOnDrag);
+	usePresenceManager(
+		presence.drag as PresenceManager<DragAndRotatePackage>,
+		(update) => {
+			if (update && update.branch === presence.branch) {
+				setPropsOnDrag(update);
+			}
+		},
+		setPropsOnDrag,
+	);
 	usePresenceManager(
 		presence.selection,
 		() => {
@@ -101,7 +110,13 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 	const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
 		e.stopPropagation();
 		const { x, y } = getOffsetCoordinates(e);
-		presence.drag.setDragging({ id: item.id, x, y, rotation: item.rotation });
+		presence.drag.setDragging({
+			id: item.id,
+			x,
+			y,
+			rotation: item.rotation,
+			branch: presence.branch,
+		});
 	};
 
 	const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
@@ -228,11 +243,8 @@ export function PresenceBox(props: { remoteSelected: boolean }): JSX.Element {
 
 export function SelectionBox(props: { selected: boolean; item: Item }): JSX.Element {
 	const { selected, item } = props;
-
 	useTree(item);
-
 	const padding = 8;
-
 	return (
 		<div
 			className={`absolute border-3 border-dashed border-black bg-transparent ${selected ? "" : " hidden"}`}
@@ -251,11 +263,8 @@ export function SelectionBox(props: { selected: boolean; item: Item }): JSX.Elem
 
 export function SelectionControls(props: { item: Item; padding: number }): JSX.Element {
 	const { item, padding } = props;
-
 	useTree(item);
-
 	const height = 40;
-
 	return (
 		<div
 			className={`absolute flex flex-row justify-items-center items-center w-full bg-gray-100 border-2 border-black shadow-md`}
@@ -274,9 +283,7 @@ export function SelectionControls(props: { item: Item; padding: number }): JSX.E
 
 export function ItemToolbar(props: { item: Item }): JSX.Element {
 	const { item } = props;
-
 	useTree(item);
-
 	return (
 		<Toolbar
 			size="small"
@@ -332,6 +339,7 @@ export function RotateHandle(props: { item: Item }): JSX.Element {
 				x: item.x,
 				y: item.y,
 				rotation: rotation.current,
+				branch: presence.branch,
 			});
 		}
 	};

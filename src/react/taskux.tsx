@@ -11,20 +11,20 @@ import { ChatOpenAI } from "@langchain/openai";
 export function TaskPane(props: {
 	hidden: boolean;
 	setHidden: (hidden: boolean) => void;
-	view: TreeViewAlpha<typeof App>;
+	main: TreeViewAlpha<typeof App>;
 	setRenderView: (view: TreeViewAlpha<typeof App>) => void;
 }): JSX.Element {
-	const { hidden, setHidden, view, setRenderView } = props;
-	const [branch, setBranch] = useState<typeof view | undefined>(undefined);
+	const { hidden, setHidden, main, setRenderView } = props;
+	const [branch, setBranch] = useState<typeof main | undefined>(undefined);
 	const [chats, setChats] = useState<string[]>([]);
 	const [agent, setAgent] = useState<SharedTreeSemanticAgent | undefined>();
 
 	useEffect(() => {
 		if (hidden) {
-			setRenderView(view);
+			setRenderView(main);
 		} else {
 			if (branch === undefined) {
-				const b = view.fork();
+				const b = main.fork();
 				setBranch((prev) => {
 					prev?.dispose();
 					return b;
@@ -34,7 +34,7 @@ export function TaskPane(props: {
 				setRenderView(branch);
 			}
 		}
-	}, [view, hidden, branch, setRenderView]);
+	}, [main, hidden, branch, setRenderView]);
 
 	useEffect(() => {
 		if (branch !== undefined) {
@@ -95,17 +95,17 @@ export function TaskPane(props: {
 					}
 					setChats([]);
 					setHidden(true);
-					setRenderView(view);
+					setRenderView(main);
 				}}
 				commitCallback={() => {
 					if (branch !== undefined) {
-						view.merge(branch, false);
+						main.merge(branch, false);
 						branch.dispose();
 						setBranch(undefined);
 					}
 					setChats([]);
 					setHidden(true);
-					setRenderView(view);
+					setRenderView(main);
 				}}
 				disabled={chats.length === 0}
 			/>

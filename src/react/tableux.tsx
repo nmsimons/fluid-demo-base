@@ -26,7 +26,7 @@ import {
 } from "../schema/app_schema.js";
 import { IMember, Tree, TreeStatus } from "fluid-framework";
 import { useVirtualizer, VirtualItem, Virtualizer } from "@tanstack/react-virtual";
-import { ColumnTypeDropdown, DeleteButton, IconButton } from "./buttonux.js";
+import { ColumnTypeDropdown, DeleteButton, IconButton } from "./tablebuttonux.js";
 import {
 	ArrowSortDownFilled,
 	ArrowSortFilled,
@@ -439,7 +439,7 @@ export function TableCellViewContent(props: { cell: Cell<FluidRow, cellValue> })
 					cellId={cell.id}
 				/>
 			);
-		case "date":
+		case "DateTime":
 			return (
 				<CellInputDate
 					value={value as DateTime}
@@ -448,7 +448,7 @@ export function TableCellViewContent(props: { cell: Cell<FluidRow, cellValue> })
 					cellId={cell.id}
 				/>
 			);
-		case "vote":
+		case "Vote":
 			return (
 				<CellInputVote
 					value={value as Vote}

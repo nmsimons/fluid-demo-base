@@ -25,9 +25,9 @@ import {
 	NoteRegular,
 	TableRegular,
 } from "@fluentui/react-icons";
-import { ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { PresenceContext } from "./PresenceContext.js";
 import { useTree } from "./useTree.js";
+import { TooltipButton, IconButton } from "./buttonux.js";
 
 export function NewShapeButton(props: {
 	items: Items;
@@ -259,45 +259,5 @@ export function ShowPaneButton(props: {
 			icon={paneHidden ? hiddenIcon : shownIcon}
 			tooltip={paneHidden ? `Show ${tooltip}` : `Hide ${tooltip}`}
 		/>
-	);
-}
-
-export function TooltipButton(props: {
-	onClick: (e: React.MouseEvent) => void;
-	children?: React.ReactNode;
-	icon: JSX.Element;
-	tooltip?: string;
-	disabled?: boolean;
-}): JSX.Element {
-	const { children, tooltip } = props;
-
-	return (
-		<Tooltip content={tooltip ?? "No Tooltip Provided"} relationship="description">
-			<ToolbarButton {...props}>{children}</ToolbarButton>
-		</Tooltip>
-	);
-}
-
-export function IconButton(props: {
-	onClick: (value: React.MouseEvent) => void;
-	children?: React.ReactNode;
-	icon: JSX.Element;
-	disabled?: boolean;
-}): JSX.Element {
-	const { children } = props;
-
-	return <ToolbarButton {...props}>{children}</ToolbarButton>;
-}
-
-export function ButtonGroup(props: { children: React.ReactNode }): JSX.Element {
-	return <div className="flex flex-intial items-center">{props.children}</div>;
-}
-
-export function Placeholder(): JSX.Element {
-	return (
-		<div className="h-full w-full flex flex-col items-center justify-center hover:bg-black hover: text-white">
-			<div className="h-12 w-12 rounded-full bg-gray-600"></div>
-			<div className="h-6 w-24 rounded-md bg-gray-600 mt-2"></div>
-		</div>
 	);
 }
