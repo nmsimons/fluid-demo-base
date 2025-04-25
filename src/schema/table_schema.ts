@@ -71,7 +71,7 @@ export function Table<
 	 * The Row schema - this is a map of Cells where the key is the column id
 	 */
 	class Row extends sf.object("Row", {
-		id: sf.identifier,
+		id: sf.string,
 		cells: sf.array(Cell),
 	}) {
 		/**
@@ -207,7 +207,7 @@ export function Table<
 	 */
 
 	class Column extends sf.object("Column", {
-		id: sf.identifier,
+		id: sf.string,
 		name: sf.string,
 		hint: sf.optional(sf.string, {
 			metadata: {
@@ -388,7 +388,7 @@ export function Table<
 		 */
 		insertColumn(props: { index: number; name: string; hint?: string }): Column {
 			const { index, name, hint } = props;
-			const column = new Column({ name, hint });
+			const column = new Column({ id: crypto.randomUUID(), name, hint });
 			this.columns.insertAt(index, column);
 			return column;
 		}

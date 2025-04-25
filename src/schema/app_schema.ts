@@ -129,7 +129,7 @@ export class Vote extends sf.object(hintValues.vote, {
 	}
 }
 export class Comment extends sf.object("Comment", {
-	id: sf.identifier,
+	id: sf.string,
 	text: sf.string,
 	userId: sf.required(sf.string, {
 		metadata: {
@@ -155,6 +155,7 @@ export class Comment extends sf.object("Comment", {
 export class Comments extends sf.array("Comments", [Comment]) {
 	addComment(text: string, userId: string, username: string): void {
 		const comment = new Comment({
+			id: crypto.randomUUID(),
 			text,
 			userId,
 			username,
@@ -170,7 +171,7 @@ export class Note extends sf.object(
 	// Fields for Notes which SharedTree will store and synchronize across clients.
 	// These fields are exposed as members of instances of the Note class.
 	{
-		id: sf.identifier,
+		id: sf.string,
 		text: sf.string,
 		author: sf.required(sf.string, {
 			metadata: {
@@ -205,7 +206,7 @@ export class FluidTable extends Table({
 	 * Create a Row before inserting it into the table
 	 * */
 	createDetachedRow(): FluidRow {
-		return new FluidTable.Row({ cells: [] });
+		return new FluidTable.Row({ id: crypto.randomUUID(), cells: [] });
 	}
 
 	/**
@@ -223,7 +224,7 @@ export class FluidTable extends Table({
 	}
 }
 export class Item extends sf.object("Item", {
-	id: sf.identifier,
+	id: sf.string,
 	x: sf.required(sf.number, {
 		metadata: {
 			description:
@@ -256,7 +257,7 @@ export class Item extends sf.object("Item", {
 }
 
 export class Group extends sf.object("Group", {
-	id: sf.identifier,
+	id: sf.string,
 	x: sf.number,
 	y: sf.number,
 	comments: Comments,

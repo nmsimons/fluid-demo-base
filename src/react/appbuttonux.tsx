@@ -67,6 +67,7 @@ export function NewShapeButton(props: {
 			type: ["circle", "square", "triangle", "star"][Math.floor(Math.random() * 4)],
 		});
 		const item = new Item({
+			id: crypto.randomUUID(),
 			x: getRandomNumber(0, canvasSize.width - maxSize - minSize),
 			y: getRandomNumber(0, canvasSize.height - maxSize - minSize),
 			comments: [],
@@ -99,11 +100,13 @@ export function NewNoteButton(props: {
 		e.stopPropagation();
 
 		const note = new Note({
+			id: crypto.randomUUID(),
 			text: "",
 			author: presence.users.getMyself().value.id,
 		});
 
 		const item = new Item({
+			id: crypto.randomUUID(),
 			x: getRandomNumber(0, canvasSize.width - 200),
 			y: getRandomNumber(0, canvasSize.height - 200),
 			comments: [],
@@ -137,7 +140,7 @@ export function NewTableButton(props: {
 
 		// Create an array of rows to be used in the table
 		const rows = new Array(10).fill(null).map(() => {
-			return { cells: [] };
+			return { id: crypto.randomUUID(), cells: [] };
 		});
 
 		// Initialize the SharedTree DDSes
@@ -145,22 +148,27 @@ export function NewTableButton(props: {
 			rows: rows,
 			columns: [
 				{
+					id: crypto.randomUUID(),
 					name: "String",
 					hint: hintValues.string,
 				},
 				{
+					id: crypto.randomUUID(),
 					name: "Number",
 					hint: hintValues.number,
 				},
 				{
+					id: crypto.randomUUID(),
 					name: "Boolean",
 					hint: hintValues.boolean,
 				},
 				{
+					id: crypto.randomUUID(),
 					name: "Date",
 					hint: hintValues.date,
 				},
 				{
+					id: crypto.randomUUID(),
 					name: "Vote",
 					hint: hintValues.vote,
 				},
@@ -168,6 +176,7 @@ export function NewTableButton(props: {
 		});
 
 		const item = new Item({
+			id: crypto.randomUUID(),
 			x: getRandomNumber(0, canvasSize.width - 200),
 			y: getRandomNumber(0, canvasSize.height - 200),
 			comments: [],
@@ -226,6 +235,7 @@ export function CommentButton(props: { item: Item }): JSX.Element {
 		const text = prompt("Enter your comment: ");
 		if (text) {
 			const comment = new Comment({
+				id: crypto.randomUUID(),
 				text,
 				userId: presence.users.getMyself().value.id,
 				username: presence.users.getMyself().value.name,

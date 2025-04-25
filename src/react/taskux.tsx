@@ -370,6 +370,7 @@ Here's an example of a function that can be run by the tree editing tool which a
 function editTree({ root, create }) {
   // Add three new shapes: a star, a triangle, and a circle
   const newStar = create.Item({
+    id: crypto.randomUUID(),
     x: 100,
     y: 400,
     rotation: 0,
@@ -378,6 +379,7 @@ function editTree({ root, create }) {
     content: create.Shape({ size: 110, color: "#FF0000", type: "star" })
   });
   const newTriangle = create.Item({
+    id: crypto.randomUUID(),
     x: 400,
     y: 100,
     rotation: 0,
@@ -386,6 +388,7 @@ function editTree({ root, create }) {
     content: create.Shape({ size: 110, color: "#FF0000", type: "triangle" })
   });
   const newCircle = create.Item({
+    id: crypto.randomUUID(),
     x: 400,
     y: 400,
     rotation: 0,
@@ -430,5 +433,7 @@ function editTree({ root, create }) {
   });
 }
 
-When responding to the user, do not reference technical details like "schema" or "data" or "tree" - explain what has happened with high-level user-friendly language.
+A common mistake in the generated function: data cannot be removed from the tree and then directly re-inserted. Instead, it must be cloned - i.e. create an equivalent new instance of that data - and then the new instance can be inserted.
+
+When responding to the user, YOU MUST NEVER reference technical details like "schema" or "data", "tree" or "pixels" - explain what has happened with high-level user-friendly language.
 `;
