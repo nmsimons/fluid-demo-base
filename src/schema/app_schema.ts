@@ -3,7 +3,24 @@
  * Licensed under the MIT License.
  */
 
-import { TreeViewConfiguration, SchemaFactory, Tree } from "fluid-framework";
+import { Table } from "./table_schema.js";
+import {
+	TreeViewConfiguration,
+	SchemaFactory,
+	Tree,
+	NodeFromSchema,
+	TreeNodeFromImplicitAllowedTypes,
+	TreeStatus,
+} from "fluid-framework";
+
+export type HintValues = (typeof hintValues)[keyof typeof hintValues];
+export const hintValues = {
+	string: "string",
+	number: "number",
+	boolean: "boolean",
+	date: "DateTime",
+	vote: "Vote",
+} as const;
 
 // Schema is defined using a factory object that generates classes for objects as well
 // as list and map nodes.
@@ -29,7 +46,7 @@ export class Shape extends sf.object("Shape", {
 /**
  * A SharedTree object date-time
  */
-export class DateTime extends sf.object("DateTime", {
+export class DateTime extends sf.object(hintValues.date, {
 	ms: sf.required(sf.number, {
 		metadata: { description: "The number of milliseconds since the epoch" },
 	}),
@@ -56,7 +73,7 @@ export class DateTime extends sf.object("DateTime", {
 /**
  * A SharedTree object that allows users to vote
  */
-export class Vote extends sf.object("Vote", {
+export class Vote extends sf.object(hintValues.vote, {
 	votes: sf.array(sf.string), // Map of votes
 }) {
 	/**
@@ -112,7 +129,7 @@ export class Vote extends sf.object("Vote", {
 	}
 }
 export class Comment extends sf.object("Comment", {
-	id: sf.identifier,
+	id: sf.string,
 	text: sf.string,
 	userId: sf.required(sf.string, {
 		metadata: {
@@ -138,6 +155,7 @@ export class Comment extends sf.object("Comment", {
 export class Comments extends sf.array("Comments", [Comment]) {
 	addComment(text: string, userId: string, username: string): void {
 		const comment = new Comment({
+			id: crypto.randomUUID(),
 			text,
 			userId,
 			username,
@@ -153,7 +171,7 @@ export class Note extends sf.object(
 	// Fields for Notes which SharedTree will store and synchronize across clients.
 	// These fields are exposed as members of instances of the Note class.
 	{
-		id: sf.identifier,
+		id: sf.string,
 		text: sf.string,
 		author: sf.required(sf.string, {
 			metadata: {
@@ -163,8 +181,50 @@ export class Note extends sf.object(
 	},
 ) {}
 
+export type typeDefinition = TreeNodeFromImplicitAllowedTypes<typeof schemaTypes>;
+const schemaTypes = [sf.string, sf.number, sf.boolean, DateTime, Vote] as const;
+
+const tableFactory = new SchemaFactory(sf.scope + "/table1");
+export class FluidTable extends Table({
+	sf: tableFactory,
+	schemaTypes,
+}) {
+	/**
+	 * Get a cell by the synthetic id
+	 * @param id The synthetic id of the cell
+	 */
+	getColumnByCellId(id: `${string}_${string}`) {
+		const [, columnId] = id.split("_");
+		const column = this.getColumn(columnId);
+		if (column === undefined) {
+			return undefined;
+		}
+		return column;
+	}
+
+	/**
+	 * Create a Row before inserting it into the table
+	 * */
+	createDetachedRow(): FluidRow {
+		return new FluidTable.Row({ id: crypto.randomUUID(), cells: [] });
+	}
+
+	/**
+	 * Delete a column and all of its cells
+	 * @param column The column to delete
+	 */
+	deleteColumn(column: FluidColumn): void {
+		if (Tree.status(column) !== TreeStatus.InDocument) return;
+		Tree.runTransaction(this, () => {
+			for (const row of this.rows) {
+				row.deleteCell(column);
+			}
+			this.removeColumn(column);
+		});
+	}
+}
 export class Item extends sf.object("Item", {
-	id: sf.identifier,
+	id: sf.string,
 	x: sf.required(sf.number, {
 		metadata: {
 			description:
@@ -184,7 +244,7 @@ export class Item extends sf.object("Item", {
 	}),
 	comments: Comments,
 	votes: Vote,
-	content: [Shape, Note],
+	content: [Shape, Note, FluidTable],
 }) {
 	delete(): void {
 		const parent = Tree.parent(this);
@@ -197,7 +257,7 @@ export class Item extends sf.object("Item", {
 }
 
 export class Group extends sf.object("Group", {
-	id: sf.identifier,
+	id: sf.string,
 	x: sf.number,
 	y: sf.number,
 	comments: Comments,
@@ -212,14 +272,8 @@ export class App extends sf.object("App", {
 	comments: Comments,
 }) {}
 
-export type HintValues = (typeof hintValues)[keyof typeof hintValues];
-export const hintValues = {
-	string: "string",
-	number: "number",
-	boolean: "boolean",
-	date: "date",
-	vote: "vote",
-} as const;
+export type FluidRow = NodeFromSchema<typeof FluidTable.Row>;
+export type FluidColumn = NodeFromSchema<typeof FluidTable.Column>;
 
 /**
  * Export the tree config appropriate for this schema.

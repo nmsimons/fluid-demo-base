@@ -1,76 +1,171 @@
 // A pane for displaying and interacting with an LLM on the right side of the screen
 import { Button, Textarea } from "@fluentui/react-components";
 import { ArrowLeftFilled } from "@fluentui/react-icons";
-import React, { useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState, useRef } from "react";
 import { Pane } from "./paneux.js";
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
 import { createFunctioningAgent, SharedTreeSemanticAgent } from "@fluidframework/tree-agent/alpha";
 import { App } from "../schema/app_schema.js";
 import { ChatOpenAI } from "@langchain/openai";
 
-export function PromptPane(props: {
+export function TaskPane(props: {
 	hidden: boolean;
 	setHidden: (hidden: boolean) => void;
-	view: TreeViewAlpha<typeof App>;
+	main: TreeViewAlpha<typeof App>;
+	setRenderView: (view: TreeViewAlpha<typeof App>) => void;
 }): JSX.Element {
-	const { hidden, setHidden, view } = props;
-	const [response, setResponse] = useState("");
-	const [log, setLog] = useState("");
-	const updateLog = (msg: string) => {
-		setLog((prev) => prev + msg + "\n");
-	};
+	const { hidden, setHidden, main, setRenderView } = props;
+	const [branch, setBranch] = useState<typeof main | undefined>(undefined);
+	const [chats, setChats] = useState<string[]>([]);
 	const [agent, setAgent] = useState<SharedTreeSemanticAgent | undefined>();
+
 	useEffect(() => {
-		setAgent(
-			createFunctioningAgent(new ChatOpenAI({ model: "o4-mini" }), view, {
-				log: (msg) => updateLog(msg),
-				domainHints,
-			}),
-		);
-	}, [view]);
+		if (hidden) {
+			setRenderView(main);
+		} else {
+			if (branch === undefined) {
+				const b = main.fork();
+				setBranch((prev) => {
+					prev?.dispose();
+					return b;
+				});
+				setRenderView(b);
+			} else {
+				setRenderView(branch);
+			}
+		}
+	}, [main, hidden, branch, setRenderView]);
+
+	useEffect(() => {
+		if (branch !== undefined) {
+			setAgent(
+				createFunctioningAgent(new ChatOpenAI({ model: "o4-mini" }), branch, {
+					log: (msg) => console.log(msg),
+					domainHints,
+				}),
+			);
+		}
+	}, [branch]);
 
 	const handlePromptSubmit = async (prompt: string) => {
 		if (agent !== undefined) {
-			const r = await agent.query(prompt);
-			setResponse(r ?? "LLM query failed.");
+			setChats([...chats, `${prompt}`, `.`]);
+			const response = await agent.query(prompt);
+			setChats((prev) => [...prev.slice(0, -1), `${response ?? "LLM query failed!"}`]);
 		}
 	};
 
-	const handleCancelResponse = () => {
-		setAgent(
-			createFunctioningAgent(new ChatOpenAI({ model: "o4-mini" }), view, {
-				log: (msg) => updateLog(msg),
-				domainHints,
-			}),
-		);
-		setResponse("");
-		setLog("");
-	};
+	useEffect(() => {
+		let cancelDots: ReturnType<typeof setTimeout> | undefined = undefined;
+		function updateDots() {
+			const dots = chats.at(-1);
+			switch (dots) {
+				case "...":
+					cancelDots = setTimeout(() => {
+						setChats((prev) => [...prev.slice(0, -1), "."]);
+					}, 1000 / 3);
+					break;
+				case ".":
+					cancelDots = setTimeout(() => {
+						setChats((prev) => [...prev.slice(0, -1), ".."]);
+					}, 1000 / 3);
+					break;
+				case "..":
+					cancelDots = setTimeout(() => {
+						setChats((prev) => [...prev.slice(0, -1), "..."]);
+					}, 1000 / 3);
+					break;
+				default:
+					clearTimeout(cancelDots);
+			}
+		}
+		updateDots();
+		return () => {
+			clearTimeout(cancelDots);
+		};
+	}, [chats]);
 
 	return (
 		<Pane hidden={hidden} setHidden={setHidden} title="Prompt">
-			<PromptLog log={log} />
-			<PromptOutput response={response} />
-			<ResponseButtons response={response} cancelCallback={handleCancelResponse} />
-			<PromptInput callback={handlePromptSubmit} />
+			<ChatLog chats={chats} />
+			<PromptCommitDiscardButtons
+				cancelCallback={() => {
+					if (branch !== undefined) {
+						setBranch(undefined);
+					}
+					setChats([]);
+					setHidden(true);
+					setRenderView(main);
+				}}
+				commitCallback={() => {
+					if (branch !== undefined) {
+						main.merge(branch, false);
+						branch.dispose();
+						setBranch(undefined);
+					}
+					setChats([]);
+					setHidden(true);
+					setRenderView(main);
+				}}
+				disabled={chats.length === 0}
+			/>
+			<PromptInput
+				callback={handlePromptSubmit}
+				disabled={chats.at(-1) === "." || chats.at(-1) === ".." || chats.at(-1) === "..."}
+			/>
 		</Pane>
 	);
 }
 
-export function PromptInput(props: { callback: (prompt: string) => void }): JSX.Element {
+export function PromptCommitDiscardButtons(props: {
+	cancelCallback: () => void;
+	commitCallback: () => void;
+	disabled?: boolean;
+}): JSX.Element {
+	const { cancelCallback, commitCallback } = props;
+	return (
+		<div className="flex flex-row gap-x-2 w-full">
+			<Button
+				appearance="primary"
+				className="flex-grow shrink-0 text-white"
+				onClick={() => {
+					commitCallback();
+				}}
+				disabled={props.disabled}
+			>
+				Complete
+			</Button>
+			<Button
+				className="flex-grow shrink-0 text-white"
+				onClick={() => {
+					cancelCallback();
+				}}
+				disabled={props.disabled}
+			>
+				Discard
+			</Button>
+		</div>
+	);
+}
+
+export function PromptInput(props: {
+	callback: (prompt: string) => void;
+	disabled: boolean;
+}): JSX.Element {
 	const { callback } = props;
 	const [prompt, setPrompt] = useState("");
 	return (
 		<div className="flex flex-col justify-self-end gap-y-2">
 			<Textarea
 				className="flex"
-				rows={8}
+				rows={4}
 				value={prompt}
 				onChange={(e) => setPrompt(e.target.value)}
 				onKeyDown={(e) => {
 					if (e.key === "Enter") {
 						e.preventDefault();
 						callback(prompt);
+						setPrompt("");
 					}
 				}}
 				placeholder="Type your prompt here..."
@@ -79,63 +174,63 @@ export function PromptInput(props: { callback: (prompt: string) => void }): JSX.
 				appearance="primary"
 				onClick={() => {
 					callback(prompt);
+					setPrompt("");
 				}}
+				disabled={props.disabled}
 			>
-				Submit Prompt
+				Submit
 			</Button>
 		</div>
 	);
 }
 
-export function PromptLog(props: { log: string }): JSX.Element {
-	const { log } = props;
+export function ChatLog(props: { chats: string[] }): JSX.Element {
+	const { chats } = props;
+	const containerRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const el = containerRef.current;
+		if (el) {
+			// scroll to bottom whenever chats changes
+			el.scrollTop = el.scrollHeight;
+		}
+	}, [chats]);
+
 	return (
-		<textarea
-			className="flex grow"
-			readOnly
-			placeholder="Your prompt log will appear here..."
-			value={log}
-			style={{
-				resize: "none",
-				backgroundColor: "white",
-				border: "1px solid #ccc",
-				padding: "8px",
-				borderRadius: "4px",
-				outline: "none",
-			}}
-		/>
+		<div ref={containerRef} className="flex flex-col grow space-y-2 overflow-y-auto">
+			{chats.map((message, idx) => {
+				const isUser = idx % 2 === 0;
+				return (
+					<div key={idx} className={`flex ${isUser ? "ml-6" : "mr-6"}`}>
+						<SpeechBubble isUser={isUser}>{message}</SpeechBubble>
+					</div>
+				);
+			})}
+		</div>
 	);
 }
 
-export function PromptOutput(props: { response: string }): JSX.Element {
-	const { response } = props;
+export function SpeechBubble(props: { children: ReactNode; isUser: boolean }): JSX.Element {
+	const { children, isUser } = props;
 	return (
-		<textarea
-			rows={8}
-			readOnly
-			placeholder="Your response will appear here..."
-			value={response}
-			style={{
-				resize: "none",
-				backgroundColor: "white",
-				border: "1px solid #ccc",
-				padding: "8px",
-				borderRadius: "4px",
-				outline: "none",
-			}}
-		/>
+		<div
+			className={`w-full px-4 py-2 rounded-xl ${
+				isUser
+					? "bg-indigo-100 text-black rounded-br-none"
+					: "bg-white text-black rounded-bl-none"
+			}`}
+		>
+			{children}
+		</div>
 	);
 }
 
-export function ResponseButtons(props: {
-	response: string;
-	cancelCallback: () => void;
-}): JSX.Element {
-	const { response, cancelCallback } = props;
+export function ResponseButtons(props: { cancelCallback: () => void }): JSX.Element {
+	const { cancelCallback } = props;
 
 	return (
 		<div className="flex flex-row gap-x-2">
-			<CancelResponseButton response={response} callback={cancelCallback} />
+			<CancelResponseButton callback={cancelCallback} />
 		</div>
 	);
 }
@@ -161,11 +256,8 @@ export function ApplyResponseButton(props: {
 	);
 }
 
-export function CancelResponseButton(props: {
-	response: string;
-	callback: () => void;
-}): JSX.Element {
-	const { callback, response } = props;
+export function CancelResponseButton(props: { callback: () => void }): JSX.Element {
+	const { callback } = props;
 
 	return (
 		<Button
@@ -173,7 +265,6 @@ export function CancelResponseButton(props: {
 			onClick={() => {
 				callback();
 			}}
-			disabled={response.trim() === ""}
 		>
 			Clear
 		</Button>
@@ -279,6 +370,7 @@ Here's an example of a function that can be run by the tree editing tool which a
 function editTree({ root, create }) {
   // Add three new shapes: a star, a triangle, and a circle
   const newStar = create.Item({
+    id: crypto.randomUUID(),
     x: 100,
     y: 400,
     rotation: 0,
@@ -287,6 +379,7 @@ function editTree({ root, create }) {
     content: create.Shape({ size: 110, color: "#FF0000", type: "star" })
   });
   const newTriangle = create.Item({
+    id: crypto.randomUUID(),
     x: 400,
     y: 100,
     rotation: 0,
@@ -295,6 +388,7 @@ function editTree({ root, create }) {
     content: create.Shape({ size: 110, color: "#FF0000", type: "triangle" })
   });
   const newCircle = create.Item({
+    id: crypto.randomUUID(),
     x: 400,
     y: 400,
     rotation: 0,
@@ -339,5 +433,7 @@ function editTree({ root, create }) {
   });
 }
 
-When responding to the user, do not reference technical details like "schema" or "data" or "tree" - explain what has happened with high-level user-friendly language.
+A common mistake in the generated function: data cannot be removed from the tree and then directly re-inserted. Instead, it must be cloned - i.e. create an equivalent new instance of that data - and then the new instance can be inserted.
+
+When responding to the user, YOU MUST NEVER reference technical details like "schema" or "data", "tree" or "pixels" - explain what has happened with high-level user-friendly language.
 `;

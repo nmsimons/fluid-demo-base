@@ -4,13 +4,14 @@
  */
 
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { App } from "../schema/app_schema.js";
+import { App, Shape } from "../schema/app_schema.js";
 import "../output.css";
 import { ConnectionState, IFluidContainer } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
-import { NewShapeButton, ShowPaneButton, NewNoteButton, TooltipButton } from "./buttonux.js";
+import { NewShapeButton, ShowPaneButton, NewNoteButton, NewTableButton } from "./appbuttonux.js";
+import { TooltipButton } from "./buttonux.js";
 import {
 	Avatar,
 	AvatarGroup,
@@ -31,22 +32,24 @@ import { User, UsersManager } from "../utils/Interfaces/UsersManager.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { DragManager } from "../utils/Interfaces/DragManager.js";
 import { DragAndRotatePackage } from "../utils/drag.js";
-import { PromptPane } from "./promptux.js";
 import { TypedSelection } from "../utils/selection.js";
 import { CommentPane } from "./commentux.js";
 import {
 	ArrowRedoFilled,
 	ArrowUndoFilled,
+	BotFilled,
+	BotRegular,
 	BranchFilled,
-	ChatFilled,
-	ChatRegular,
+	BranchRegular,
+	ColorFilled,
 	CommentFilled,
 	CommentRegular,
 	DeleteRegular,
-	MergeFilled,
+	MergeRegular,
 } from "@fluentui/react-icons";
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
 import { useTree } from "./useTree.js";
+import { TaskPane } from "./taskux.js";
 
 export function ReactApp(props: {
 	tree: TreeViewAlpha<typeof App>;
@@ -54,13 +57,13 @@ export function ReactApp(props: {
 	users: UsersManager;
 	container: IFluidContainer;
 	undoRedo: undoRedo;
-	drag: DragManager<DragAndRotatePackage>;
+	drag: DragManager<DragAndRotatePackage | null>;
 }): JSX.Element {
 	const { tree, selection, users, container, undoRedo, drag } = props;
 	const [connectionState, setConnectionState] = useState("");
 	const [saved, setSaved] = useState(false);
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-	const [promptPaneHidden, setPromptPaneHidden] = useState(false);
+	const [taskPaneHidden, setTaskPaneHidden] = useState(true);
 	const [commentPaneHidden, setCommentPaneHidden] = useState(true);
 	const [selectedItemId, setSelectedItemId] = useState<string>("");
 	const [view, setView] = useState<TreeViewAlpha<typeof App>>(tree);
@@ -96,6 +99,10 @@ export function ReactApp(props: {
 	}, []);
 
 	useEffect(() => {
+		console.log("View Changed");
+	}, [view]);
+
+	useEffect(() => {
 		const unsubscribe = selection.events.on("localUpdated", () => {
 			const itemId =
 				selection.getLocalSelection().length !== 0
@@ -115,6 +122,7 @@ export function ReactApp(props: {
 				users: users,
 				selection: selection,
 				drag: drag,
+				branch: view !== tree,
 			}}
 		>
 			<div
@@ -124,8 +132,37 @@ export function ReactApp(props: {
 				<Header saved={saved} connectionState={connectionState} />
 				<Toolbar className="h-[48px] shadow-lg">
 					<ToolbarGroup>
+						<TooltipButton
+							tooltip="Undo"
+							onClick={() => undoRedo.undo()}
+							icon={<ArrowUndoFilled />}
+							disabled={!undoRedo.canUndo()}
+						/>
+						<TooltipButton
+							tooltip="Redo"
+							onClick={() => undoRedo.redo()}
+							icon={<ArrowRedoFilled />}
+							disabled={!undoRedo.canRedo()}
+						/>
+					</ToolbarGroup>
+					<ToolbarDivider />
+					<ToolbarGroup>
 						<NewShapeButton items={view.root.items} canvasSize={canvasSize} />
 						<NewNoteButton items={view.root.items} canvasSize={canvasSize} />
+						<NewTableButton items={view.root.items} canvasSize={canvasSize} />
+						<TooltipButton
+							tooltip="Make the selected shape red"
+							onClick={() => {
+								const selectedItem = view.root.items.find(
+									(item) => item.id === selectedItemId,
+								);
+								if (selectedItem?.content instanceof Shape) {
+									selectedItem.content.color = "red";
+								}
+							}}
+							icon={<ColorFilled />}
+							disabled={selectedItemId === ""}
+						/>
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
@@ -146,46 +183,31 @@ export function ReactApp(props: {
 							tooltip="Comments"
 						/>
 						<ShowPaneButton
-							hiddenIcon={<ChatRegular />}
-							shownIcon={<ChatFilled />}
-							hidePane={setPromptPaneHidden}
-							paneHidden={promptPaneHidden}
+							hiddenIcon={<BotRegular />}
+							shownIcon={<BotFilled />}
+							hidePane={setTaskPaneHidden}
+							paneHidden={taskPaneHidden}
 							tooltip="AI Chat"
 						/>
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
 						<TooltipButton
+							tooltip="Create Branch"
 							onClick={() => createBranch(tree, view, setView)}
-							tooltip="Branch"
-							icon={<BranchFilled />}
+							icon={tree !== view ? <BranchFilled /> : <BranchRegular />}
 							disabled={view !== tree}
 						/>
 						<TooltipButton
+							tooltip="Merge Branch"
 							onClick={() => mergeBranch(tree, view, setView)}
-							tooltip="Merge"
-							icon={<MergeFilled />}
+							icon={<MergeRegular />}
 							disabled={view === tree}
-						/>
-					</ToolbarGroup>
-					<ToolbarDivider />
-					<ToolbarGroup>
-						<TooltipButton
-							tooltip="Undo"
-							onClick={() => undoRedo.undo()}
-							icon={<ArrowUndoFilled />}
-							disabled={!undoRedo.canUndo()}
-						/>
-						<TooltipButton
-							tooltip="Redo"
-							onClick={() => undoRedo.redo()}
-							icon={<ArrowRedoFilled />}
-							disabled={!undoRedo.canRedo()}
 						/>
 					</ToolbarGroup>
 				</Toolbar>
 				{view !== tree ? (
-					<MessageBarComponent message="You are working in a branch. Until the branch is merged, your changes are not saved." />
+					<MessageBarComponent message="While viewing a Task, others will not see your changes (and you will not see theirs) until you complete the task." />
 				) : (
 					<></>
 				)}
@@ -201,10 +223,11 @@ export function ReactApp(props: {
 						itemId={selectedItemId}
 						app={tree.root}
 					/>
-					<PromptPane
-						hidden={promptPaneHidden}
-						setHidden={setPromptPaneHidden}
-						view={view}
+					<TaskPane
+						hidden={taskPaneHidden}
+						setHidden={setTaskPaneHidden}
+						main={tree}
+						setRenderView={setView}
 					/>
 				</div>
 			</div>
