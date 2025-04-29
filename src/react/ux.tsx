@@ -53,13 +53,15 @@ import { TaskPane } from "./taskux.js";
 
 export function ReactApp(props: {
 	tree: TreeViewAlpha<typeof App>;
-	selection: SelectionManager<TypedSelection>;
+	itemSelection: SelectionManager<TypedSelection>;
+	/** The selection manager for the table */
+	tableSelection: SelectionManager<TypedSelection>;
 	users: UsersManager;
 	container: IFluidContainer;
 	undoRedo: undoRedo;
 	drag: DragManager<DragAndRotatePackage | null>;
 }): JSX.Element {
-	const { tree, selection, users, container, undoRedo, drag } = props;
+	const { tree, itemSelection, users, container, undoRedo, drag } = props;
 	const [connectionState, setConnectionState] = useState("");
 	const [saved, setSaved] = useState(false);
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -103,10 +105,10 @@ export function ReactApp(props: {
 	}, [view]);
 
 	useEffect(() => {
-		const unsubscribe = selection.events.on("localUpdated", () => {
+		const unsubscribe = itemSelection.events.on("localUpdated", () => {
 			const itemId =
-				selection.getLocalSelection().length !== 0
-					? selection.getLocalSelection()[0].id
+				itemSelection.getLocalSelection().length !== 0
+					? itemSelection.getLocalSelection()[0].id
 					: undefined;
 
 			const selectedItem = view.root.items.find((item) => item.id === itemId);
@@ -114,13 +116,14 @@ export function ReactApp(props: {
 			setSelectedItemId(selectedItem?.id ?? "");
 		});
 		return unsubscribe;
-	}, [view, selection]);
+	}, [view, itemSelection]);
 
 	return (
 		<PresenceContext.Provider
 			value={{
 				users: users,
-				selection: selection,
+				itemSelection: itemSelection,
+				tableSelection: itemSelection,
 				drag: drag,
 				branch: view !== tree,
 			}}

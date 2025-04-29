@@ -39,8 +39,8 @@ export function Canvas(props: {
 	}, []);
 
 	const handleClick = () => {
-		if (presence.selection) {
-			presence.selection.clearSelection();
+		if (presence.itemSelection) {
+			presence.itemSelection.clearSelection();
 		}
 	};
 

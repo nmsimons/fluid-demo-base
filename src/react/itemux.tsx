@@ -44,9 +44,11 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 
 	const presence = useContext(PresenceContext); // Placeholder for context if needed
 
-	const [selected, setSelected] = useState(presence.selection.testSelection({ id: item.id }));
+	const [selected, setSelected] = useState(
+		presence.tableSelection.testSelection({ id: item.id }),
+	);
 	const [remoteSelected, setRemoteSelected] = useState<string[]>(
-		presence.selection.testRemoteSelection({ id: item.id }),
+		presence.tableSelection.testRemoteSelection({ id: item.id }),
 	);
 
 	const [itemProps, setItemProps] = useState<{
@@ -95,15 +97,15 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 		setPropsOnDrag,
 	);
 	usePresenceManager(
-		presence.selection,
+		presence.tableSelection,
 		() => {
-			setRemoteSelected(presence.selection.testRemoteSelection({ id: item.id }));
+			setRemoteSelected(presence.tableSelection.testRemoteSelection({ id: item.id }));
 		},
 		(update) => {
 			setSelected(update.some((selection) => selection.id === item.id));
 		},
 		() => {
-			setRemoteSelected(presence.selection.testRemoteSelection({ id: item.id }));
+			setRemoteSelected(presence.tableSelection.testRemoteSelection({ id: item.id }));
 		},
 	);
 
@@ -121,7 +123,7 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 
 	const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
 		e.stopPropagation();
-		presence.selection.setSelection({ id: item.id });
+		presence.tableSelection.setSelection({ id: item.id });
 		setOffset(calculateOffsetFromCanvasOrigin(e, item));
 		e.dataTransfer.setDragImage(new Image(), 0, 0);
 	};
@@ -146,11 +148,11 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 
 	const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
 		e.stopPropagation();
-		if (presence.selection) {
+		if (presence.tableSelection) {
 			if (selected) {
-				presence.selection.clearSelection();
+				presence.tableSelection.clearSelection();
 			} else {
-				presence.selection.setSelection({ id: item.id });
+				presence.tableSelection.setSelection({ id: item.id });
 			}
 		}
 	};

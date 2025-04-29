@@ -24,7 +24,7 @@ import {
 	typeDefinition,
 	hintValues,
 } from "../schema/app_schema.js";
-import { IMember, Tree, TreeStatus } from "fluid-framework";
+import { Tree } from "fluid-framework";
 import { useVirtualizer, VirtualItem, Virtualizer } from "@tanstack/react-virtual";
 import { ColumnTypeDropdown, DeleteButton, IconButton } from "./tablebuttonux.js";
 import {
@@ -34,7 +34,6 @@ import {
 	ReOrderDotsVertical16Filled,
 } from "@fluentui/react-icons";
 import { selectionType } from "../utils/selection.js";
-import { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import {
 	CellInputBoolean,
 	CellInputNumber,
@@ -150,7 +149,7 @@ export function TableHeaderView(props: { header: Header<FluidRow, unknown> }): J
 	const fluidTable = useContext(TableContext).table; // Get the fluid table from context
 	const fluidColumn = fluidTable.getColumn(header.column.id);
 	useTree(fluidColumn);
-	const selection = useContext(PresenceContext).selection; // Get the selection manager from context
+	const selection = useContext(PresenceContext).tableSelection; // Get the selection manager from context
 
 	// handle a focus event in the header
 	const handleFocus = () => {
@@ -321,7 +320,7 @@ export function TableRowView(props: {
 export function IndexCellView(props: { rowId: string }): JSX.Element {
 	const { rowId } = props;
 
-	const selection = useContext(PresenceContext).selection; // Get the selection manager from context
+	const selection = useContext(PresenceContext).tableSelection; // Get the selection manager from context
 
 	// handle a click event in the cell
 	const handleClick = (e: React.MouseEvent) => {
@@ -362,7 +361,7 @@ export function IndexCellView(props: { rowId: string }): JSX.Element {
 export function TableCellView(props: { cell: Cell<FluidRow, cellValue> }): JSX.Element {
 	const { cell } = props;
 
-	const selection = useContext(PresenceContext).selection; // Get the selection manager from context
+	const selection = useContext(PresenceContext).tableSelection; // Get the selection manager from context
 
 	// handle a click event in the cell
 	const handleFocus = (e: React.FocusEvent) => {
@@ -474,7 +473,7 @@ export function PresenceIndicator(props: {
 	const { item, type } = props;
 	const selectedItem = { id: item.id, type } as const; // Default to cell for Cell and Row types, Header will override it
 
-	const selection = useContext(PresenceContext).selection;
+	const selection = useContext(PresenceContext).tableSelection;
 
 	const [selected, setSelected] = useState(selection.testSelection(selectedItem));
 	const [remoteSelected, setRemoteSelected] = useState(

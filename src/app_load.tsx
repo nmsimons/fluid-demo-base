@@ -52,8 +52,14 @@ export async function loadApp(props: {
 	// Create a selection manager in the workspace
 	// The selection manager will be used to manage the selection of cells in the table
 	// and will be used to synchronize the selection across clients
-	const selection = createTypedSelectionManager({
-		name: "selection:main", // The name of the workspace
+	const itemSelection = createTypedSelectionManager({
+		name: "selection:item", // The name of the workspace
+		workspace, // The presence workspace
+		presence, // The presence data object
+	});
+
+	const tableSelection = createTypedSelectionManager({
+		name: "selection:table", // The name of the workspace
 		workspace, // The presence workspace
 		presence, // The presence data object
 	});
@@ -88,7 +94,8 @@ export async function loadApp(props: {
 		<FluentProvider theme={webLightTheme}>
 			<ReactApp
 				tree={appTree}
-				selection={selection}
+				itemSelection={itemSelection}
+				tableSelection={tableSelection}
 				drag={drag}
 				users={users}
 				container={container}
