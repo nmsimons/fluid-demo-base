@@ -231,7 +231,7 @@ export function ReactApp(props: {
 						hidden={commentPaneHidden}
 						setHidden={setCommentPaneHidden}
 						itemId={selectedItemId}
-						app={tree.root}
+						app={view.root}
 					/>
 					<TaskPane
 						hidden={taskPaneHidden}
