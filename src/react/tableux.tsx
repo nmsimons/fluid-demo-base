@@ -45,13 +45,14 @@ import {
 import { PresenceContext } from "./PresenceContext.js";
 import { useTree } from "./useTree.js";
 import { usePresenceManager } from "./usePresenceManger.js";
-import { TableContext } from "./TableContext.js";
+import { TableContext, useTable } from "./TableContext.js";
 
 const leftColumnWidth = "20px"; // Width of the index column
 const columnWidth = "200px"; // Width of the data columns
 
 export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 	const { fluidTable } = props;
+	const invalTable = useTree(fluidTable, true); // Register for tree deltas when the component mounts
 	const [data, setData] = useState<FluidRow[]>(
 		fluidTable.rows.map((row) => {
 			return row;
@@ -72,7 +73,7 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 			}
 		});
 		return unsubscribe;
-	}, [fluidTable]);
+	}, [invalTable, fluidTable]);
 
 	// Register for tree deltas when the component mounts. Any time the columns change, the app will update.
 	useEffect(() => {
@@ -85,7 +86,7 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 			}
 		});
 		return unsubscribe;
-	}, [fluidTable]);
+	}, [invalTable, fluidTable]);
 
 	// The virtualizer will need a reference to the scrollable container element
 	const tableContainerRef = React.useRef<HTMLDivElement>(null);
@@ -115,7 +116,7 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 
 export function TableHeadersView(props: { table: Table<FluidRow> }): JSX.Element {
 	const { table } = props;
-	const fluidTable = useContext(TableContext).table; // Get the fluid table from context
+	const fluidTable = useTable(); // Get the fluid table from context
 	useTree(fluidTable);
 
 	return (
@@ -156,7 +157,7 @@ export function IndexHeaderView(): JSX.Element {
 
 export function TableHeaderView(props: { header: Header<FluidRow, unknown> }): JSX.Element {
 	const { header } = props;
-	const fluidTable = useContext(TableContext).table; // Get the fluid table from context
+	const fluidTable = useTable(); // Get the fluid table from context
 	const fluidColumn = fluidTable.getColumn(header.column.id);
 	useTree(fluidColumn);
 	const selection = useContext(PresenceContext).tableSelection; // Get the selection manager from context
@@ -280,7 +281,7 @@ export function TableRowView(props: {
 	rowVirtualizer: Virtualizer<HTMLDivElement, HTMLTableRowElement>;
 }): JSX.Element {
 	const { row, virtualRow, rowVirtualizer } = props;
-	const fluidTable = useContext(TableContext).table; // Get the fluid table from context
+	const fluidTable = useTable(); // Get the fluid table from context
 
 	const style = { transform: `translateY(${virtualRow.start}px)` };
 
@@ -397,14 +398,14 @@ export function TableCellView(props: { cell: Cell<FluidRow, cellValue> }): JSX.E
 export function TableCellViewContent(props: { cell: Cell<FluidRow, cellValue> }): JSX.Element {
 	const { cell } = props;
 
-	const fluidTable = useContext(TableContext).table; // Get the fluid table from context
+	const fluidTable = useTable(); // Get the fluid table from context
 
 	const fluidRow = fluidTable.getRow(cell.row.id);
 	if (fluidRow === undefined) {
 		console.error("Fluid row not found", cell.row.id);
 		return <></>;
 	}
-	const fluidColumn = fluidRow.table.getColumn(cell.column.id);
+	const fluidColumn = fluidTable.getColumn(cell.column.id);
 	const value = fluidRow.getCell(fluidColumn);
 	useTree(fluidRow, true);
 	useTree(fluidColumn);
