@@ -10,13 +10,7 @@ import { ConnectionState, IFluidContainer } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
-import {
-	NewShapeButton,
-	ShowPaneButton,
-	NewNoteButton,
-	NewTableButton,
-	createTable,
-} from "./appbuttonux.js";
+import { NewShapeButton, ShowPaneButton, NewNoteButton, NewTableButton } from "./appbuttonux.js";
 import { TooltipButton } from "./buttonux.js";
 import {
 	Avatar,
@@ -45,13 +39,9 @@ import {
 	ArrowUndoFilled,
 	BotFilled,
 	BotRegular,
-	BranchFilled,
-	BranchRegular,
-	ColorFilled,
 	CommentFilled,
 	CommentRegular,
 	DeleteRegular,
-	MergeRegular,
 } from "@fluentui/react-icons";
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
 import { useTree } from "./useTree.js";
@@ -159,7 +149,7 @@ export function ReactApp(props: {
 						<NewShapeButton items={view.root.items} canvasSize={canvasSize} />
 						<NewNoteButton items={view.root.items} canvasSize={canvasSize} />
 						<NewTableButton items={view.root.items} canvasSize={canvasSize} />
-						<TooltipButton
+						{/* <TooltipButton
 							tooltip="Make the selected shape a new table"
 							onClick={() => {
 								const selectedItem = view.root.items.find(
@@ -172,7 +162,7 @@ export function ReactApp(props: {
 							}}
 							icon={<ColorFilled />}
 							disabled={selectedItemId === ""}
-						/>
+						/> */}
 					</ToolbarGroup>
 					<ToolbarDivider />
 					<ToolbarGroup>
@@ -201,7 +191,7 @@ export function ReactApp(props: {
 						/>
 					</ToolbarGroup>
 					<ToolbarDivider />
-					<ToolbarGroup>
+					{/* <ToolbarGroup>
 						<TooltipButton
 							tooltip="Create Branch"
 							onClick={() => createBranch(tree, view, setView)}
@@ -214,7 +204,7 @@ export function ReactApp(props: {
 							icon={<MergeRegular />}
 							disabled={view === tree}
 						/>
-					</ToolbarGroup>
+					</ToolbarGroup> */}
 				</Toolbar>
 				{view !== tree ? (
 					<MessageBarComponent message="While viewing a Task, others will not see your changes (and you will not see theirs) until you complete the task." />
@@ -340,11 +330,10 @@ export const Facepile = (props: Partial<AvatarGroupProps>) => {
 
 	useEffect(() => {
 		// Update the user roster when users disconnect
-		// TODO: NICK
-		// const unsubscribe = users.clients.events.on("attendeeDisconnected", () => {
-		// 	setUserRoster(users.getConnectedUsers());
-		// });
-		// return unsubscribe;
+		const unsubscribe = users.clients.events.on("attendeeDisconnected", () => {
+			setUserRoster(users.getConnectedUsers());
+		});
+		return unsubscribe;
 	}, []);
 
 	const { inlineItems, overflowItems } = partitionAvatarGroupItems<User>({

@@ -572,6 +572,14 @@
     --tw-outline-style: none;
     outline-style: none;
   }
+  .selection\:table {
+    & *::selection {
+      display: table;
+    }
+    &::selection {
+      display: table;
+    }
+  }
   .odd\:bg-gray-100 {
     &:nth-child(odd) {
       background-color: var(--color-gray-100);

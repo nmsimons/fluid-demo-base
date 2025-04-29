@@ -1,5 +1,5 @@
 import React, { JSX, useState, useEffect, useContext, useRef } from "react";
-import { FluidTable, Item, Note, Shape } from "../schema/app_schema.js";
+import { Comments, FluidTable, Item, Note, Shape } from "../schema/app_schema.js";
 import { PresenceContext } from "./PresenceContext.js";
 import { ShapeView } from "./shapeux.js";
 import { Tree } from "fluid-framework";
@@ -11,6 +11,7 @@ import { useTree } from "./useTree.js";
 import { usePresenceManager } from "./usePresenceManger.js";
 import { PresenceManager } from "../utils/Interfaces/PresenceManager.js";
 import { TableView } from "./tableux.js";
+import { Comment24Filled } from "@fluentui/react-icons";
 
 const getContentType = (item: Item): string => {
 	if (Tree.is(item.content, Shape)) {
@@ -148,7 +149,7 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 		e.stopPropagation();
 		if (presence.itemSelection) {
 			if (selected) {
-				presence.itemSelection.clearSelection();
+				// presence.itemSelection.clearSelection();
 			} else {
 				presence.itemSelection.setSelection({ id: item.id });
 			}
@@ -171,9 +172,29 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 			className={`absolute`}
 			style={{ ...itemProps }}
 		>
+			<CommentIndicator comments={item.comments} />
 			<SelectionBox selected={selected} item={item} />
 			<PresenceBox remoteSelected={remoteSelected.length > 0} />
 			{getContentElement(item)}
+		</div>
+	);
+}
+
+export function CommentIndicator(props: { comments: Comments }): JSX.Element {
+	const { comments } = props;
+	useTree(comments, true);
+
+	return (
+		<div
+			className={`absolute ${comments.length > 0 ? "" : " hidden"}`}
+			style={{
+				right: -24,
+				top: -18,
+				zIndex: 10000,
+				color: "blue",
+			}}
+		>
+			<Comment24Filled />
 		</div>
 	);
 }
@@ -229,13 +250,14 @@ export function PresenceBox(props: { remoteSelected: boolean }): JSX.Element {
 	const padding = 8;
 	return (
 		<div
-			className={`absolute border-3 border-dashed border-black opacity-40 bg-transparent ${remoteSelected ? "" : " hidden"}`}
+			className={`absolute border-3 border-dashed border-black bg-transparent opacity-40 ${remoteSelected ? "" : " hidden"}`}
 			style={{
 				left: -padding,
 				top: -padding,
 				width: `calc(100% + ${padding * 2}px)`,
 				height: `calc(100% + ${padding * 2}px)`,
 				zIndex: 1000,
+				pointerEvents: "none",
 			}}
 		></div>
 	);
@@ -246,17 +268,19 @@ export function SelectionBox(props: { selected: boolean; item: Item }): JSX.Elem
 	useTree(item);
 	const padding = 8;
 	return (
-		<div
-			className={`absolute border-3 border-dashed border-black bg-transparent ${selected ? "" : " hidden"}`}
-			style={{
-				left: -padding,
-				top: -padding,
-				width: `calc(100% + ${padding * 2}px)`,
-				height: `calc(100% + ${padding * 2}px)`,
-				zIndex: 1000,
-			}}
-		>
+		<div className={`bg-transparent ${selected ? "" : " hidden"}`}>
 			<SelectionControls item={item} padding={padding} />
+			<div
+				className={`absolute border-3 border-dashed border-black bg-transparent`}
+				style={{
+					left: -padding,
+					top: -padding,
+					width: `calc(100% + ${padding * 2}px)`,
+					height: `calc(100% + ${padding * 2}px)`,
+					zIndex: 1000,
+					pointerEvents: "none",
+				}}
+			></div>
 		</div>
 	);
 }
@@ -269,9 +293,9 @@ export function SelectionControls(props: { item: Item; padding: number }): JSX.E
 		<div
 			className={`absolute flex flex-row justify-items-center items-center w-full bg-gray-100 border-2 border-black shadow-md`}
 			style={{
-				left: -padding / 2,
+				left: -padding,
 				top: -(height + 2) - padding,
-				width: `calc(100% + ${padding}px)`,
+				width: `calc(100% + ${padding * 2}px)`,
 				height: height,
 			}}
 		>
