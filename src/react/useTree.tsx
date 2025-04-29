@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import { Tree } from "fluid-framework";
 import { TreeNode } from "@fluidframework/tree/alpha";
 
-export function useTree(node: TreeNode, deep: boolean = false): object {
-	const [inval, setInval] = useState({});
+export function useTree(node: TreeNode, deep: boolean = false): number {
+	const [inval, setInval] = useState(0);
 
 	useEffect(() => {
 		const unsubscribe = Tree.on(node, deep ? "treeChanged" : "nodeChanged", () => {
-			setInval({});
+			setInval((prev) => prev + 1);
 		});
 		return unsubscribe;
 	}, [node, deep]);
