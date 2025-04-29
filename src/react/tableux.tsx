@@ -24,7 +24,7 @@ import {
 	typeDefinition,
 	hintValues,
 } from "../schema/app_schema.js";
-import { Tree } from "fluid-framework";
+import { Tree, TreeStatus } from "fluid-framework";
 import { useVirtualizer, VirtualItem, Virtualizer } from "@tanstack/react-virtual";
 import { ColumnTypeDropdown, DeleteButton, IconButton } from "./tablebuttonux.js";
 import {
@@ -64,7 +64,12 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 	// Register for tree deltas when the component mounts. Any time the rows change, the app will update.
 	useEffect(() => {
 		const unsubscribe = Tree.on(fluidTable, "treeChanged", () => {
-			setData(fluidTable.rows.map((row) => row));
+			if (Tree.status(fluidTable) === TreeStatus.InDocument) {
+				setData(fluidTable.rows.map((row) => row));
+			} else {
+				console.error("Fluid table not in document");
+				return <></>;
+			}
 		});
 		return unsubscribe;
 	}, [fluidTable]);
@@ -72,7 +77,12 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 	// Register for tree deltas when the component mounts. Any time the columns change, the app will update.
 	useEffect(() => {
 		const unsubscribe = Tree.on(fluidTable, "treeChanged", () => {
-			setColumns(updateColumnData(fluidTable.columns.map((column) => column)));
+			if (Tree.status(fluidTable) === TreeStatus.InDocument) {
+				setColumns(updateColumnData(fluidTable.columns.map((column) => column)));
+			} else {
+				console.error("Fluid table not in document");
+				return <></>;
+			}
 		});
 		return unsubscribe;
 	}, [fluidTable]);

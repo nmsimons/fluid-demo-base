@@ -4,13 +4,19 @@
  */
 
 import React, { JSX, useContext, useEffect, useState } from "react";
-import { App, Shape } from "../schema/app_schema.js";
+import { App } from "../schema/app_schema.js";
 import "../output.css";
 import { ConnectionState, IFluidContainer } from "fluid-framework";
 import { Canvas } from "./canvasux.js";
 import type { SelectionManager } from "../utils/Interfaces/SelectionManager.js";
 import { undoRedo } from "../utils/undo.js";
-import { NewShapeButton, ShowPaneButton, NewNoteButton, NewTableButton } from "./appbuttonux.js";
+import {
+	NewShapeButton,
+	ShowPaneButton,
+	NewNoteButton,
+	NewTableButton,
+	createTable,
+} from "./appbuttonux.js";
 import { TooltipButton } from "./buttonux.js";
 import {
 	Avatar,
@@ -154,13 +160,14 @@ export function ReactApp(props: {
 						<NewNoteButton items={view.root.items} canvasSize={canvasSize} />
 						<NewTableButton items={view.root.items} canvasSize={canvasSize} />
 						<TooltipButton
-							tooltip="Make the selected shape red"
+							tooltip="Make the selected shape a new table"
 							onClick={() => {
 								const selectedItem = view.root.items.find(
 									(item) => item.id === selectedItemId,
 								);
-								if (selectedItem?.content instanceof Shape) {
-									selectedItem.content.color = "red";
+								if (selectedItem) {
+									const newTable = createTable();
+									selectedItem.content = newTable;
 								}
 							}}
 							icon={<ColorFilled />}

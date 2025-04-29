@@ -138,42 +138,7 @@ export function NewTableButton(props: {
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 
-		// Create an array of rows to be used in the table
-		const rows = new Array(10).fill(null).map(() => {
-			return { id: crypto.randomUUID(), cells: [] };
-		});
-
-		// Initialize the SharedTree DDSes
-		const table = new FluidTable({
-			rows: rows,
-			columns: [
-				{
-					id: crypto.randomUUID(),
-					name: "String",
-					hint: hintValues.string,
-				},
-				{
-					id: crypto.randomUUID(),
-					name: "Number",
-					hint: hintValues.number,
-				},
-				{
-					id: crypto.randomUUID(),
-					name: "Boolean",
-					hint: hintValues.boolean,
-				},
-				{
-					id: crypto.randomUUID(),
-					name: "Date",
-					hint: hintValues.date,
-				},
-				{
-					id: crypto.randomUUID(),
-					name: "Vote",
-					hint: hintValues.vote,
-				},
-			],
-		});
+		const table = createTable();
 
 		const item = new Item({
 			id: crypto.randomUUID(),
@@ -195,6 +160,45 @@ export function NewTableButton(props: {
 		/>
 	);
 }
+
+export const createTable = () => {
+	const rows = new Array(10).fill(null).map(() => {
+		return { id: crypto.randomUUID(), cells: [] };
+	});
+
+	// Initialize the SharedTree DDSes
+	const table = new FluidTable({
+		rows: rows,
+		columns: [
+			{
+				id: crypto.randomUUID(),
+				name: "String",
+				hint: hintValues.string,
+			},
+			{
+				id: crypto.randomUUID(),
+				name: "Number",
+				hint: hintValues.number,
+			},
+			{
+				id: crypto.randomUUID(),
+				name: "Boolean",
+				hint: hintValues.boolean,
+			},
+			{
+				id: crypto.randomUUID(),
+				name: "Date",
+				hint: hintValues.date,
+			},
+			{
+				id: crypto.randomUUID(),
+				name: "Vote",
+				hint: hintValues.vote,
+			},
+		],
+	});
+	return table;
+};
 
 // Generate a random number between min and max
 const getRandomNumber = (min: number, max: number): number => {
