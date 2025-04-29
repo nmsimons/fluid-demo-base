@@ -50,14 +50,13 @@ import { TaskPane } from "./taskux.js";
 export function ReactApp(props: {
 	tree: TreeViewAlpha<typeof App>;
 	itemSelection: SelectionManager<TypedSelection>;
-	/** The selection manager for the table */
 	tableSelection: SelectionManager<TypedSelection>;
 	users: UsersManager;
 	container: IFluidContainer;
 	undoRedo: undoRedo;
 	drag: DragManager<DragAndRotatePackage | null>;
 }): JSX.Element {
-	const { tree, itemSelection, users, container, undoRedo, drag } = props;
+	const { tree, itemSelection, tableSelection, users, container, undoRedo, drag } = props;
 	const [connectionState, setConnectionState] = useState("");
 	const [saved, setSaved] = useState(false);
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -119,7 +118,7 @@ export function ReactApp(props: {
 			value={{
 				users: users,
 				itemSelection: itemSelection,
-				tableSelection: itemSelection,
+				tableSelection: tableSelection,
 				drag: drag,
 				branch: view !== tree,
 			}}

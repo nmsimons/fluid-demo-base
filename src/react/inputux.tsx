@@ -7,9 +7,7 @@ import { useTree } from "./useTree.js";
 
 export function ColumnInput(props: { column: FluidColumn }): JSX.Element {
 	const { column } = props;
-
 	useTree(column);
-
 	return (
 		<input
 			id={column.id}

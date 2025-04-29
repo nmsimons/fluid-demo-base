@@ -177,9 +177,7 @@ export function TableHeaderView(props: { header: Header<FluidRow, unknown> }): J
 			}}
 			className="relative p-1 border-r-1 border-gray-100"
 			onFocus={handleFocus}
-			onClick={(e) => {
-				e.stopPropagation();
-			}}
+			onClick={(e) => {}}
 		>
 			<PresenceIndicator item={header} type="column" /> {/* Local selection box */}
 			<PresenceIndicator item={header} type="column" /> {/* Remote selection box */}
@@ -334,7 +332,6 @@ export function IndexCellView(props: { rowId: string }): JSX.Element {
 
 	// handle a click event in the cell
 	const handleClick = (e: React.MouseEvent) => {
-		e.stopPropagation();
 		if (e.ctrlKey) {
 			selection.toggleSelection({ id: rowId, type: "row" });
 		} else {
@@ -375,15 +372,12 @@ export function TableCellView(props: { cell: Cell<FluidRow, cellValue> }): JSX.E
 
 	// handle a click event in the cell
 	const handleFocus = (e: React.FocusEvent) => {
-		e.stopPropagation();
 		selection.setSelection({ id: cell.id, type: "cell" });
 	};
 
 	return (
 		<td
-			onClick={(e) => {
-				e.stopPropagation();
-			}}
+			onClick={(e) => {}}
 			onFocus={(e) => handleFocus(e)}
 			style={{
 				display: "flex",
@@ -519,7 +513,7 @@ export function PresenceIndicator(props: {
 
 function PresenceBox(props: { color: string; hidden: boolean; isRow: boolean }): JSX.Element {
 	const { color, hidden, isRow } = props;
-	const className = `absolute z-1 h-full w-full inset-0 pointer-events-none outline-2 -outline-offset-2
+	const className = `pointer-events-none absolute z-1 h-full w-full inset-0 pointer-events-none outline-2 -outline-offset-2
 	${hidden ? "hidden" : ""} ${color} opacity-50`;
 	if (isRow) {
 		return <td className={className}></td>;
