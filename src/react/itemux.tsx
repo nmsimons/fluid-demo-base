@@ -36,7 +36,7 @@ export function ContentElement(props: { item: Item }): JSX.Element {
 	} else if (Tree.is(item.content, Note)) {
 		return <NoteView note={item.content} />;
 	} else if (Tree.is(item.content, FluidTable)) {
-		return <TableView fluidTable={item.content} />;
+		return <TableView key={item.content.id} fluidTable={item.content} />;
 	} else {
 		return <></>;
 	}

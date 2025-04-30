@@ -299,6 +299,7 @@ export function Table<
 	 * The Table schema
 	 */
 	class Table extends sf.object("Table", {
+		id: sf.string,
 		rows: sf.array(Row),
 		columns: sf.array(Column),
 	}) {

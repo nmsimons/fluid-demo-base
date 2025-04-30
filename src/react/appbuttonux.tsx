@@ -168,6 +168,7 @@ export const createTable = () => {
 
 	// Initialize the SharedTree DDSes
 	const table = new FluidTable({
+		id: crypto.randomUUID(),
 		rows: rows,
 		columns: [
 			{
