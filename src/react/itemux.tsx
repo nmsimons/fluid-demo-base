@@ -11,7 +11,8 @@ import { useTree } from "./useTree.js";
 import { usePresenceManager } from "./usePresenceManger.js";
 import { PresenceManager } from "../utils/Interfaces/PresenceManager.js";
 import { TableView } from "./tableux.js";
-import { Comment24Filled } from "@fluentui/react-icons";
+import { Comment20Regular } from "@fluentui/react-icons";
+import { PaneContext } from "./PaneContext.js";
 
 const getContentType = (item: Item): string => {
 	if (Tree.is(item.content, Shape)) {
@@ -188,17 +189,18 @@ export function CommentIndicator(props: { comments: Comments }): JSX.Element {
 	const { comments } = props;
 	useTree(comments, true);
 
+	const panes = useContext(PaneContext).panes;
+	const visible =
+		(panes.find((pane) => pane.name === "comments")?.visible ?? false) && comments.length > 0;
 	return (
 		<div
-			className={`absolute ${comments.length > 0 ? "" : " hidden"}`}
+			className={`absolute pointer-events-none flex flex-row w-full justify-center  ${visible ? "" : " hidden"}`}
 			style={{
-				right: -24,
-				top: -18,
+				top: -40,
 				zIndex: 10000,
-				color: "blue",
 			}}
 		>
-			<Comment24Filled />
+			<Comment20Regular />
 		</div>
 	);
 }

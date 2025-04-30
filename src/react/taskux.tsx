@@ -1,6 +1,6 @@
 // A pane for displaying and interacting with an LLM on the right side of the screen
 import { Button, Textarea } from "@fluentui/react-components";
-import { ArrowLeftFilled } from "@fluentui/react-icons";
+import { ArrowLeftFilled, BotRegular } from "@fluentui/react-icons";
 import React, { ReactNode, useEffect, useState, useRef } from "react";
 import { Pane } from "./paneux.js";
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
@@ -86,7 +86,7 @@ export function TaskPane(props: {
 	}, [chats]);
 
 	return (
-		<Pane hidden={hidden} setHidden={setHidden} title="Prompt">
+		<Pane hidden={hidden} setHidden={setHidden} title="AI Task">
 			<ChatLog chats={chats} />
 			<PromptCommitDiscardButtons
 				cancelCallback={() => {
@@ -124,10 +124,10 @@ export function PromptCommitDiscardButtons(props: {
 }): JSX.Element {
 	const { cancelCallback, commitCallback } = props;
 	return (
-		<div className="flex flex-row gap-x-2 w-full">
+		<div className="flex flex-row gap-x-2 w-full shrink-0">
 			<Button
 				appearance="primary"
-				className="flex-grow shrink-0 text-white"
+				className="flex-grow shrink-0 "
 				onClick={() => {
 					commitCallback();
 				}}
@@ -136,7 +136,7 @@ export function PromptCommitDiscardButtons(props: {
 				Complete
 			</Button>
 			<Button
-				className="flex-grow shrink-0 text-white"
+				className="flex-grow shrink-0 "
 				onClick={() => {
 					cancelCallback();
 				}}
@@ -155,7 +155,7 @@ export function PromptInput(props: {
 	const { callback } = props;
 	const [prompt, setPrompt] = useState("");
 	return (
-		<div className="flex flex-col justify-self-end gap-y-2">
+		<div className="flex flex-col justify-self-end gap-y-2 ">
 			<Textarea
 				className="flex"
 				rows={4}
@@ -197,11 +197,16 @@ export function ChatLog(props: { chats: string[] }): JSX.Element {
 	}, [chats]);
 
 	return (
-		<div ref={containerRef} className="flex flex-col grow space-y-2 overflow-y-auto">
+		<div ref={containerRef} className="relative flex flex-col grow space-y-2 overflow-y-auto">
+			<div
+				className={`absolute top-0 left-0 h-full w-full ${chats.length > 0 ? "hidden" : ""}`}
+			>
+				<BotRegular className="h-full w-full opacity-10" />
+			</div>
 			{chats.map((message, idx) => {
 				const isUser = idx % 2 === 0;
 				return (
-					<div key={idx} className={`flex ${isUser ? "ml-6" : "mr-6"}`}>
+					<div key={idx} className={`z-100 flex ${isUser ? "ml-6" : "mr-6"}`}>
 						<SpeechBubble isUser={isUser}>{message}</SpeechBubble>
 					</div>
 				);

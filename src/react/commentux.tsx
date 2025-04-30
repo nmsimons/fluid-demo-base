@@ -3,10 +3,20 @@ import { Button, Textarea } from "@fluentui/react-components";
 import React, { useContext, useEffect, useState } from "react";
 import { Pane } from "./paneux.js";
 import { PresenceContext } from "./PresenceContext.js";
-import { App, Comment, Comments, Group, Item, Shape } from "../schema/app_schema.js";
+import {
+	App,
+	Comment,
+	Comments,
+	FluidTable,
+	Group,
+	Item,
+	Note,
+	Shape,
+} from "../schema/app_schema.js";
 import { useTree } from "./useTree.js";
 import { VoteButton } from "./appbuttonux.js";
 import { SpeechBubble } from "./taskux.js";
+import { CommentRegular } from "@fluentui/react-icons";
 
 export function CommentPane(props: {
 	hidden: boolean;
@@ -27,11 +37,15 @@ export function CommentPane(props: {
 			const content = item.content;
 			if (content instanceof Shape) {
 				setTitle(`Comments on ${content.type}`);
+			} else if (content instanceof Note) {
+				setTitle("Comments on Note");
+			} else if (content instanceof FluidTable) {
+				setTitle("Comments on Table");
 			} else {
-				setTitle("Comments on note");
+				setTitle("Comments on Item");
 			}
 		} else {
-			setTitle("General comments");
+			setTitle("General Comments");
 		}
 	}, [item]);
 
@@ -56,7 +70,12 @@ export function CommentList(props: { comments: Comments }): JSX.Element {
 	const { comments } = props;
 	useTree(comments);
 	return (
-		<div className="flex flex-col grow space-y-2 overflow-y-auto">
+		<div className="relative flex flex-col grow space-y-2 overflow-y-auto">
+			<div
+				className={`absolute top-0 left-0 h-full w-full ${comments.length > 0 ? "hidden" : ""}`}
+			>
+				<CommentRegular className="h-full w-full opacity-10" />
+			</div>
 			{comments.map((comment) => (
 				<CommentView key={comment.id} comment={comment} />
 			))}
@@ -70,7 +89,7 @@ export function CommentView(props: { comment: Comment }): JSX.Element {
 	const presence = useContext(PresenceContext);
 	const isMyComment = comment.userId === presence.users.getMyself().value.id;
 	return (
-		<div className={`${isMyComment ? "ml-6" : "mr-6"} `}>
+		<div className={`z-100 ${isMyComment ? "ml-6" : "mr-6"} `}>
 			<div className={`flex items-center justify-between mb-2`}>
 				<div className="text-xs">{comment.username}</div>
 				<div className="text-xs text-gray-500">

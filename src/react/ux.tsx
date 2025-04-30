@@ -46,6 +46,7 @@ import {
 import { TreeViewAlpha } from "@fluidframework/tree/alpha";
 import { useTree } from "./useTree.js";
 import { TaskPane } from "./taskux.js";
+import { PaneContext } from "./PaneContext.js";
 
 export function ReactApp(props: {
 	tree: TreeViewAlpha<typeof App>;
@@ -186,7 +187,7 @@ export function ReactApp(props: {
 							shownIcon={<BotFilled />}
 							hidePane={setTaskPaneHidden}
 							paneHidden={taskPaneHidden}
-							tooltip="AI Chat"
+							tooltip="AI Task"
 						/>
 					</ToolbarGroup>
 					<ToolbarDivider />
@@ -204,18 +205,28 @@ export function ReactApp(props: {
 							disabled={view === tree}
 						/>
 					</ToolbarGroup> */}
+					{view !== tree ? (
+						<MessageBarComponent message="While viewing an AI Task, others will not see your changes (and you will not see theirs) until you complete the task." />
+					) : (
+						<></>
+					)}
 				</Toolbar>
-				{view !== tree ? (
-					<MessageBarComponent message="While viewing a Task, others will not see your changes (and you will not see theirs) until you complete the task." />
-				) : (
-					<></>
-				)}
+
 				<div className="flex h-[calc(100vh-96px)] w-full flex-row ">
-					<Canvas
-						items={view.root.items}
-						container={container}
-						setSize={(width, height) => setCanvasSize({ width, height })}
-					/>
+					<PaneContext.Provider
+						value={{
+							panes: [
+								{ name: "comments", visible: !commentPaneHidden },
+								{ name: "task", visible: !taskPaneHidden },
+							],
+						}}
+					>
+						<Canvas
+							items={view.root.items}
+							container={container}
+							setSize={(width, height) => setCanvasSize({ width, height })}
+						/>
+					</PaneContext.Provider>
 					<CommentPane
 						hidden={commentPaneHidden}
 						setHidden={setCommentPaneHidden}
@@ -375,7 +386,7 @@ export const Facepile = (props: Partial<AvatarGroupProps>) => {
 export function MessageBarComponent(props: { message: string }): JSX.Element {
 	const { message } = props;
 	return (
-		<MessageBar className="shadow-lg">
+		<MessageBar>
 			<MessageBarBody>
 				<MessageBarTitle>{message}</MessageBarTitle>
 			</MessageBarBody>
