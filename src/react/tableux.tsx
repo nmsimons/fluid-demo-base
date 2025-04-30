@@ -52,14 +52,23 @@ const columnWidth = "200px"; // Width of the data columns
 
 export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 	const { fluidTable } = props;
-	const invalTable = useTree(fluidTable, true); // Register for tree deltas when the component mounts
+	const invalTable = useTree(fluidTable); // Register for tree deltas when the component mounts
+	const invalColumns = useTree(fluidTable.columns, true); // Register for tree deltas when the component mounts
+	const invalRows = useTree(fluidTable.rows, true); // Register for tree deltas when the component mounts
+
 	const [data, setData] = useState<FluidRow[]>(
 		fluidTable.rows.map((row) => {
 			return row;
 		}),
 	);
 	const [columns, setColumns] = useState<ColumnDef<FluidRow, cellValue>[]>(
-		updateColumnData(fluidTable.columns.map((column) => column)),
+		updateColumnData(
+			fluidTable.columns.map((column) => ({
+				id: column.id,
+				name: column.name,
+				hint: column.hint ?? "",
+			})),
+		), // Create a column helper based on the columns in the table,
 	);
 
 	// Register for tree deltas when the component mounts. Any time the rows change, the app will update.
@@ -69,24 +78,30 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 				setData(fluidTable.rows.map((row) => row));
 			} else {
 				console.error("Fluid table not in document");
-				return <></>;
+				// Do not return a JSX element here; just return undefined
+				return;
 			}
 		});
 		return unsubscribe;
-	}, [invalTable, fluidTable]);
+	}, [invalRows, fluidTable]);
 
-	// Register for tree deltas when the component mounts. Any time the columns change, the app will update.
 	useEffect(() => {
-		const unsubscribe = Tree.on(fluidTable, "treeChanged", () => {
-			if (Tree.status(fluidTable) === TreeStatus.InDocument) {
-				setColumns(updateColumnData(fluidTable.columns.map((column) => column)));
-			} else {
-				console.error("Fluid table not in document");
-				return <></>;
-			}
-		});
-		return unsubscribe;
-	}, [invalTable, fluidTable]);
+		if (Tree.status(fluidTable) === TreeStatus.InDocument) {
+			setColumns(
+				updateColumnData(
+					fluidTable.columns.map((column) => ({
+						id: column.id,
+						name: column.name,
+						hint: column.hint ?? "",
+					})),
+				),
+			);
+		} else {
+			console.error("Fluid table not in document");
+			// Do not return a JSX element here; just return undefined
+			return;
+		}
+	}, [invalColumns, fluidTable]);
 
 	// The virtualizer will need a reference to the scrollable container element
 	const tableContainerRef = React.useRef<HTMLDivElement>(null);
@@ -525,7 +540,7 @@ function PresenceBox(props: { color: string; hidden: boolean; isRow: boolean }):
 
 export type cellValue = typeDefinition; // Define the allowed cell value types
 
-const updateColumnData = (columnsArray: FluidColumn[]) => {
+const updateColumnData = (columnsArray: { id: string; name: string; hint: string }[]) => {
 	// Create a column helper based on the columns in the table
 	const columnHelper = createColumnHelper<FluidRow>();
 
@@ -617,7 +632,7 @@ const voteSortingFn: SortingFn<FluidRow> = (
 
 // Get the sorting function and sort direction for a column
 const getSortingConfig = (
-	column: FluidColumn,
+	column: { id: string; name: string; hint: string }, // Column object with id, name, and hint properties
 ): { fn: SortingFnOption<FluidRow> | undefined; desc: boolean } => {
 	if (column.hint === hintValues.boolean) {
 		return { fn: "basic", desc: false };

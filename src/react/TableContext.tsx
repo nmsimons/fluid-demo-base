@@ -9,7 +9,6 @@ export const TableContext = createContext<{
 });
 
 export const useTable = (): FluidTable => {
-	console.log("useTable called");
 	const currentTableContext = useContext(TableContext);
 	if (
 		Tree.is(currentTableContext.table, FluidTable) &&
