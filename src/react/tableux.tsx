@@ -73,20 +73,18 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 
 	// Register for tree deltas when the component mounts. Any time the rows change, the app will update.
 	useEffect(() => {
-		const unsubscribe = Tree.on(fluidTable, "treeChanged", () => {
-			if (Tree.status(fluidTable) === TreeStatus.InDocument) {
-				setData(fluidTable.rows.map((row) => row));
-			} else {
-				console.error("Fluid table not in document");
-				// Do not return a JSX element here; just return undefined
-				return;
-			}
-		});
-		return unsubscribe;
-	}, [invalRows, fluidTable]);
+		if (Tree.status(fluidTable) === TreeStatus.InDocument) {
+			setData(fluidTable.rows.map((row) => row));
+		} else {
+			console.error("Fluid table not in document");
+			// Do not return a JSX element here; just return undefined
+			return;
+		}
+	}, [invalRows, invalTable]);
 
 	useEffect(() => {
 		if (Tree.status(fluidTable) === TreeStatus.InDocument) {
+			console.log("Columns changed");
 			setColumns(
 				updateColumnData(
 					fluidTable.columns.map((column) => ({
@@ -101,7 +99,7 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 			// Do not return a JSX element here; just return undefined
 			return;
 		}
-	}, [invalColumns, fluidTable]);
+	}, [invalColumns, invalTable]);
 
 	// The virtualizer will need a reference to the scrollable container element
 	const tableContainerRef = React.useRef<HTMLDivElement>(null);
@@ -131,8 +129,6 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 
 export function TableHeadersView(props: { table: Table<FluidRow> }): JSX.Element {
 	const { table } = props;
-	const fluidTable = useTable(); // Get the fluid table from context
-	useTree(fluidTable);
 
 	return (
 		<thead
@@ -173,7 +169,19 @@ export function IndexHeaderView(): JSX.Element {
 export function TableHeaderView(props: { header: Header<FluidRow, unknown> }): JSX.Element {
 	const { header } = props;
 	const fluidTable = useTable(); // Get the fluid table from context
-	const fluidColumn = fluidTable.getColumn(header.column.id);
+	const fluidColumn: FluidColumn | undefined = (() => {
+		try {
+			return fluidTable.getColumn(header.id); // Get the column from the table
+		} catch (e) {
+			console.error("Fluid column not found", header.id);
+			return undefined;
+		}
+	})();
+
+	if (fluidColumn === undefined) {
+		return <></>;
+	}
+
 	useTree(fluidColumn);
 	const selection = useContext(PresenceContext).tableSelection; // Get the selection manager from context
 
@@ -420,7 +428,20 @@ export function TableCellViewContent(props: { cell: Cell<FluidRow, cellValue> })
 		console.error("Fluid row not found", cell.row.id);
 		return <></>;
 	}
-	const fluidColumn = fluidTable.getColumn(cell.column.id);
+	const fluidColumn = (() => {
+		try {
+			return fluidTable.getColumn(cell.column.id); // Get the column from the table
+		} catch (e) {
+			console.error("Fluid column not found", cell.column.id);
+			return undefined;
+		}
+	})();
+
+	if (!fluidColumn) {
+		console.error("Fluid column not found", cell.column.id);
+		return <></>;
+	}
+
 	const value = fluidRow.getCell(fluidColumn);
 	useTree(fluidRow, true);
 	useTree(fluidColumn);

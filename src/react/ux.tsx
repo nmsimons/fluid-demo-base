@@ -190,7 +190,6 @@ export function ReactApp(props: {
 							tooltip="AI Task"
 						/>
 					</ToolbarGroup>
-					<ToolbarDivider />
 					{/* <ToolbarGroup>
 						<TooltipButton
 							tooltip="Create Branch"
@@ -206,7 +205,9 @@ export function ReactApp(props: {
 						/>
 					</ToolbarGroup> */}
 					{view !== tree ? (
-						<MessageBarComponent message="While viewing an AI Task, others will not see your changes (and you will not see theirs) until you complete the task." />
+						<ToolbarGroup style={{ marginLeft: "auto" }}>
+							<MessageBarComponent message="While viewing an AI Task, others will not see your changes (and you will not see theirs) until you complete the task." />
+						</ToolbarGroup>
 					) : (
 						<></>
 					)}

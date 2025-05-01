@@ -183,18 +183,8 @@ export const createTable = () => {
 			},
 			{
 				id: crypto.randomUUID(),
-				name: "Boolean",
-				hint: hintValues.boolean,
-			},
-			{
-				id: crypto.randomUUID(),
 				name: "Date",
 				hint: hintValues.date,
-			},
-			{
-				id: crypto.randomUUID(),
-				name: "Vote",
-				hint: hintValues.vote,
 			},
 		],
 	});

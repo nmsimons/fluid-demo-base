@@ -30,8 +30,6 @@ export function ContentElement(props: { item: Item }): JSX.Element {
 	const { item } = props;
 	useTree(item.content);
 
-	console.log("ContentElement");
-
 	if (Tree.is(item.content, Shape)) {
 		return <ShapeView shape={item.content} />;
 	} else if (Tree.is(item.content, Note)) {
