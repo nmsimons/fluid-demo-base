@@ -4,9 +4,9 @@
 import {
 	type Presence,
 	StateFactory,
-	LatestEvents,
+	LatestRawEvents,
 	StatesWorkspace,
-	Latest,
+	LatestRaw,
 	AttendeeId,
 	ClientConnectionId,
 } from "@fluidframework/presence/alpha";
@@ -23,7 +23,7 @@ export function createDragManager(props: {
 
 	class DragManagerImpl implements DragManager<DragAndRotatePackage | null> {
 		initialState: DragAndRotatePackage | null = null;
-		state: Latest<DragAndRotatePackage | null>;
+		state: LatestRaw<DragAndRotatePackage | null>;
 
 		constructor(
 			name: string,
@@ -32,10 +32,9 @@ export function createDragManager(props: {
 		) {
 			workspace.add(
 				name,
-				// @ts-expect-error: using null even though it isn't allowed.
-				StateFactory.latest<DragAndRotatePackage | null>(this.initialState),
+				StateFactory.latest<DragAndRotatePackage | null>({ local: this.initialState }),
 			);
-			this.state = workspace.props[name];
+			this.state = workspace.states[name];
 		}
 
 		public clients = {
@@ -46,7 +45,7 @@ export function createDragManager(props: {
 			events: this.presence.attendees.events,
 		};
 
-		public get events(): Listenable<LatestEvents<DragAndRotatePackage | null>> {
+		public get events(): Listenable<LatestRawEvents<DragAndRotatePackage | null>> {
 			return this.state.events;
 		}
 

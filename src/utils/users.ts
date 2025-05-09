@@ -5,9 +5,9 @@
 import {
 	type Presence,
 	StateFactory,
-	LatestEvents,
+	LatestRawEvents,
 	StatesWorkspace,
-	Latest,
+	LatestRaw,
 	AttendeeId,
 	ClientConnectionId,
 	AttendeeStatus,
@@ -25,18 +25,18 @@ export function createUsersManager(props: {
 
 	class UsersManagerImpl implements UsersManager {
 		initialState: UserInfo = me; // Default initial state for the user manager
-		state: Latest<UserInfo>;
+		state: LatestRaw<UserInfo>;
 
 		constructor(
 			name: string,
 			workspace: StatesWorkspace<{}>,
 			private presence: Presence,
 		) {
-			workspace.add(name, StateFactory.latest(this.initialState));
-			this.state = workspace.props[name];
+			workspace.add(name, StateFactory.latest({ local: this.initialState }));
+			this.state = workspace.states[name];
 		}
 
-		public get events(): Listenable<LatestEvents<UserInfo>> {
+		public get events(): Listenable<LatestRawEvents<UserInfo>> {
 			return this.state.events;
 		}
 

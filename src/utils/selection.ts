@@ -7,9 +7,9 @@
 import {
 	type Presence,
 	StateFactory,
-	LatestEvents,
+	LatestRawEvents,
 	StatesWorkspace,
-	Latest as LatestState,
+	LatestRaw as LatestState,
 	AttendeeId,
 	ClientConnectionId,
 } from "@fluidframework/presence/alpha";
@@ -35,11 +35,11 @@ export function createTypedSelectionManager(props: {
 			workspace: StatesWorkspace<{}>,
 			private presence: Presence,
 		) {
-			workspace.add(name, StateFactory.latest(this.initialState));
-			this.state = workspace.props[name];
+			workspace.add(name, StateFactory.latest({ local: this.initialState }));
+			this.state = workspace.states[name];
 		}
 
-		public get events(): Listenable<LatestEvents<TypedSelection[]>> {
+		public get events(): Listenable<LatestRawEvents<TypedSelection[]>> {
 			return this.state.events;
 		}
 
@@ -161,7 +161,7 @@ export function createSelectionManager(props: {
 	const { presence, workspace, name } = props;
 
 	class SelectionManagerImpl implements SelectionManager {
-		initialState = []; // Default initial state for the selection manager
+		initialState: Selection[] = []; // Default initial state for the selection manager
 
 		state: LatestState<Selection[]>;
 
@@ -170,11 +170,11 @@ export function createSelectionManager(props: {
 			workspace: StatesWorkspace<{}>,
 			private presence: Presence,
 		) {
-			workspace.add(name, StateFactory.latest(this.initialState));
-			this.state = workspace.props[name];
+			workspace.add(name, StateFactory.latest({ local: this.initialState }));
+			this.state = workspace.states[name];
 		}
 
-		public get events(): Listenable<LatestEvents<Selection[]>> {
+		public get events(): Listenable<LatestRawEvents<Selection[]>> {
 			return this.state.events;
 		}
 
