@@ -13,6 +13,7 @@ import { PresenceManager } from "../utils/Interfaces/PresenceManager.js";
 import { TableView } from "./tableux.js";
 import { Comment20Regular } from "@fluentui/react-icons";
 import { PaneContext } from "./PaneContext.js";
+import { LayoutContext } from "./useLayoutManger.js";
 
 const getContentType = (item: Item): string => {
 	if (Tree.is(item.content, Shape)) {
@@ -41,12 +42,17 @@ export function ContentElement(props: { item: Item }): JSX.Element {
 	}
 }
 
-export function ItemView(props: { item: Item; index: number }): JSX.Element {
+export function ItemView(props: {
+	item: Item;
+	index: number;
+	canvasPosition: { left: number; top: number };
+}): JSX.Element {
 	const { item, index } = props;
 	const itemInval = useTree(item);
 	const [offset, setOffset] = useState({ x: 0, y: 0 });
 
 	const presence = useContext(PresenceContext); // Placeholder for context if needed
+	const layout = useContext(LayoutContext);
 
 	const [selected, setSelected] = useState(presence.itemSelection.testSelection({ id: item.id }));
 	const [remoteSelected, setRemoteSelected] = useState<string[]>(
@@ -165,8 +171,23 @@ export function ItemView(props: { item: Item; index: number }): JSX.Element {
 		itemProps.zIndex = index;
 	}
 
+	const ref = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		if (ref.current !== null) {
+			const bb = ref.current.getBoundingClientRect();
+			const relativeBb = {
+				left: bb.left - props.canvasPosition.left,
+				top: bb.top - props.canvasPosition.top,
+				right: bb.right - props.canvasPosition.left,
+				bottom: bb.bottom - props.canvasPosition.top,
+			};
+			layout.set(item.id, relativeBb);
+		}
+	}, [item.id, layout]);
+
 	return (
 		<div
+			ref={ref}
 			onClick={(e) => handleClick(e)}
 			onDragStart={(e) => handleDragStart(e)}
 			onDrag={(e) => handleDrag(e)}

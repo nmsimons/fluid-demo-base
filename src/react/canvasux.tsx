@@ -4,7 +4,7 @@
  * Licensed under the MIT License.
  */
 
-import React, { JSX, useContext, useEffect } from "react";
+import React, { JSX, useContext, useEffect, useRef } from "react";
 import { Items, Item } from "../schema/app_schema.js";
 import { IFluidContainer } from "fluid-framework";
 import { PresenceContext } from "./PresenceContext.js";
@@ -21,6 +21,10 @@ export function Canvas(props: {
 	useTree(items);
 
 	const canvasRef = React.useRef<HTMLDivElement>(null);
+	const [canvasPosition, setCanvasPosition] = React.useState({
+		left: 0,
+		top: 0,
+	});
 
 	const handleResize = () => {
 		if (canvasRef.current) {
@@ -32,8 +36,9 @@ export function Canvas(props: {
 	useEffect(() => {
 		// Set the initial size of the canvas
 		if (canvasRef.current) {
-			const { width, height } = canvasRef.current.getBoundingClientRect();
+			const { width, height, left, top } = canvasRef.current.getBoundingClientRect();
 			props.setSize(width, height);
+			setCanvasPosition({ left, top });
 		}
 		window.addEventListener("resize", handleResize);
 	}, []);
@@ -56,7 +61,19 @@ export function Canvas(props: {
 			className="relative flex h-full w-full bg-transparent overflow-auto "
 		>
 			{items.map((item, index) =>
-				item instanceof Item ? <ItemView item={item} key={item.id} index={index} /> : <></>,
+				item instanceof Item ? (
+					<ItemView
+						item={item}
+						key={item.id}
+						index={index}
+						canvasPosition={{
+							left: canvasPosition.left,
+							top: canvasPosition.top,
+						}}
+					/>
+				) : (
+					<></>
+				),
 			)}
 		</div>
 	);
