@@ -43,7 +43,7 @@ import {
 	ColumnInput,
 } from "./inputux.js";
 import { PresenceContext } from "./PresenceContext.js";
-import { useTree } from "./useTree.js";
+import { objectIdNumber, useTree } from "./useTree.js";
 import { usePresenceManager } from "./usePresenceManger.js";
 import { TableContext, useTable } from "./TableContext.js";
 
@@ -56,19 +56,9 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 	const invalColumns = useTree(fluidTable.columns, true); // Register for tree deltas when the component mounts
 	const invalRows = useTree(fluidTable.rows, true); // Register for tree deltas when the component mounts
 
-	const [data, setData] = useState<FluidRow[]>(
-		fluidTable.rows.map((row) => {
-			return row;
-		}),
-	);
+	const [data, setData] = useState<FluidRow[]>(fluidTable.rows.map((row) => row));
 	const [columns, setColumns] = useState<ColumnDef<FluidRow, cellValue>[]>(
-		updateColumnData(
-			fluidTable.columns.map((column) => ({
-				id: column.id,
-				name: column.name,
-				hint: column.hint ?? "",
-			})),
-		), // Create a column helper based on the columns in the table,
+		updateColumnData(fluidTable.columns.map((column) => column)), // Create a column helper based on the columns in the table
 	);
 
 	// Register for tree deltas when the component mounts. Any time the rows change, the app will update.
@@ -85,15 +75,7 @@ export function TableView(props: { fluidTable: FluidTable }): JSX.Element {
 	useEffect(() => {
 		if (Tree.status(fluidTable) === TreeStatus.InDocument) {
 			console.log("Columns changed");
-			setColumns(
-				updateColumnData(
-					fluidTable.columns.map((column) => ({
-						id: column.id,
-						name: column.name,
-						hint: column.hint ?? "",
-					})),
-				),
-			);
+			setColumns(updateColumnData(fluidTable.columns.map((column) => column)));
 		} else {
 			console.error("Fluid table not in document");
 			// Do not return a JSX element here; just return undefined
@@ -318,7 +300,7 @@ export function TableRowView(props: {
 
 	return (
 		<tr
-			key={row.id}
+			key={objectIdNumber(fluidRow)}
 			data-index={virtualRow.index} //needed for dynamic row height measurement
 			ref={(node) => {
 				rowVirtualizer.measureElement(node);
@@ -479,6 +461,7 @@ export function TableCellViewContent(props: { cell: Cell<FluidRow, cellValue> })
 		case "DateTime":
 			return (
 				<CellInputDate
+					key={objectIdNumber(fluidRow)}
 					value={value as DateTime}
 					row={fluidRow}
 					column={fluidColumn}
@@ -488,6 +471,7 @@ export function TableCellViewContent(props: { cell: Cell<FluidRow, cellValue> })
 		case "Vote":
 			return (
 				<CellInputVote
+					key={objectIdNumber(fluidRow)}
 					value={value as Vote}
 					row={fluidRow}
 					column={fluidColumn}
@@ -498,6 +482,7 @@ export function TableCellViewContent(props: { cell: Cell<FluidRow, cellValue> })
 			// If the value is undefined, make it a string
 			return (
 				<CellInputString
+					key={objectIdNumber(fluidRow)}
 					value={value as string}
 					row={fluidRow}
 					column={fluidColumn}
@@ -561,7 +546,7 @@ function PresenceBox(props: { color: string; hidden: boolean; isRow: boolean }):
 
 export type cellValue = typeDefinition; // Define the allowed cell value types
 
-const updateColumnData = (columnsArray: { id: string; name: string; hint: string }[]) => {
+const updateColumnData = (columnsArray: FluidColumn[]) => {
 	// Create a column helper based on the columns in the table
 	const columnHelper = createColumnHelper<FluidRow>();
 
@@ -653,7 +638,7 @@ const voteSortingFn: SortingFn<FluidRow> = (
 
 // Get the sorting function and sort direction for a column
 const getSortingConfig = (
-	column: { id: string; name: string; hint: string }, // Column object with id, name, and hint properties
+	column: FluidColumn, // Column object with id, name, and hint properties
 ): { fn: SortingFnOption<FluidRow> | undefined; desc: boolean } => {
 	if (column.hint === hintValues.boolean) {
 		return { fn: "basic", desc: false };

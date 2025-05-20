@@ -7,7 +7,7 @@ import { DragAndRotatePackage } from "../utils/drag.js";
 import { DeleteButton, VoteButton } from "./appbuttonux.js";
 import { Toolbar, ToolbarGroup } from "@fluentui/react-components";
 import { NoteView } from "./noteux.js";
-import { useTree } from "./useTree.js";
+import { objectIdNumber, useTree } from "./useTree.js";
 import { usePresenceManager } from "./usePresenceManger.js";
 import { PresenceManager } from "../utils/Interfaces/PresenceManager.js";
 import { TableView } from "./tableux.js";
@@ -31,11 +31,11 @@ export function ContentElement(props: { item: Item }): JSX.Element {
 	useTree(item.content);
 
 	if (Tree.is(item.content, Shape)) {
-		return <ShapeView shape={item.content} />;
+		return <ShapeView key={objectIdNumber(item.content)} shape={item.content} />;
 	} else if (Tree.is(item.content, Note)) {
-		return <NoteView note={item.content} />;
+		return <NoteView key={objectIdNumber(item.content)} note={item.content} />;
 	} else if (Tree.is(item.content, FluidTable)) {
-		return <TableView key={item.content.id} fluidTable={item.content} />;
+		return <TableView key={objectIdNumber(item.content)} fluidTable={item.content} />;
 	} else {
 		return <></>;
 	}

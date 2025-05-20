@@ -3,7 +3,7 @@ import { DateTime, Vote, FluidRow, FluidColumn } from "../schema/app_schema.js";
 import { Tree, TreeStatus } from "fluid-framework";
 import { ThumbLikeFilled, ThumbLikeRegular } from "@fluentui/react-icons";
 import { ToolbarButton } from "@fluentui/react-components";
-import { useTree } from "./useTree.js";
+import { objectIdNumber, useTree } from "./useTree.js";
 
 export function ColumnInput(props: { column: FluidColumn }): JSX.Element {
 	const { column } = props;
@@ -41,7 +41,7 @@ export function CellInputBoolean(props: {
 
 	return (
 		// Layout the checkbox and label in a flex container and align the checkbox to the left
-		<div className="flex items-center w-full h-full p-1 ">
+		<div key={objectIdNumber(row)} className="flex items-center w-full h-full p-1 ">
 			<input
 				id={cellId}
 				className="outline-none w-4 h-4"
@@ -71,13 +71,15 @@ export function CellInputString(props: {
 	};
 
 	return (
-		<input
-			id={cellId}
-			className="outline-none w-full h-full"
-			type="text"
-			value={value ?? ""}
-			onChange={handleChange}
-		></input>
+		<div key={objectIdNumber(row)}>
+			<input
+				id={cellId}
+				className="outline-none w-full h-full"
+				type="text"
+				value={value ?? ""}
+				onChange={handleChange}
+			></input>
+		</div>
 	);
 }
 
