@@ -4,11 +4,11 @@
 import {
 	type Presence,
 	StateFactory,
-	LatestRawEvents,
 	StatesWorkspace,
-	LatestRaw,
 	AttendeeId,
 	ClientConnectionId,
+	LatestRaw,
+	LatestRawEvents,
 } from "@fluidframework/presence/alpha";
 import { Listenable } from "fluid-framework";
 import { DragManager } from "./Interfaces/DragManager.js";

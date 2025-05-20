@@ -9,7 +9,7 @@ import {
 	StateFactory,
 	LatestRawEvents,
 	StatesWorkspace,
-	LatestRaw as LatestState,
+	LatestRaw,
 	AttendeeId,
 	ClientConnectionId,
 } from "@fluidframework/presence/alpha";
@@ -28,7 +28,7 @@ export function createTypedSelectionManager(props: {
 	class SelectionManagerImpl implements SelectionManager<TypedSelection> {
 		initialState: TypedSelection[] = []; // Default initial state for the selection manager
 
-		state: LatestState<TypedSelection[]>;
+		state: LatestRaw<TypedSelection[]>;
 
 		constructor(
 			name: string,
@@ -163,7 +163,7 @@ export function createSelectionManager(props: {
 	class SelectionManagerImpl implements SelectionManager {
 		initialState: Selection[] = []; // Default initial state for the selection manager
 
-		state: LatestState<Selection[]>;
+		state: LatestRaw<Selection[]>;
 
 		constructor(
 			name: string,
