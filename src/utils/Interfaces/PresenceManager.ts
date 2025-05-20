@@ -2,10 +2,10 @@ import {
 	ClientConnectionId,
 	AttendeeId,
 	Attendee,
-	Latest,
-	LatestEvents,
-	LatestMap,
-	LatestMapEvents,
+	LatestRaw,
+	LatestRawEvents,
+	LatestMapRaw,
+	LatestMapRawEvents,
 	AttendeesEvents,
 } from "@fluidframework/presence/alpha";
 import { Listenable } from "fluid-framework";
@@ -19,13 +19,13 @@ export interface PresenceClients {
 
 export interface PresenceManager<TState> {
 	initialState: TState;
-	state: Latest<TState>;
+	state: LatestRaw<TState>;
 	clients: PresenceClients;
-	events: Listenable<LatestEvents<TState>>;
+	events: Listenable<LatestRawEvents<TState>>;
 }
 
 export interface PresenceMapManager<TState> {
-	state: LatestMap<TState>;
+	state: LatestMapRaw<TState>;
 	clients: PresenceClients;
-	events: Listenable<LatestMapEvents<TState, string>>;
+	events: Listenable<LatestMapRawEvents<TState, string>>;
 }
